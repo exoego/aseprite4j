@@ -8,8 +8,5 @@ public class Main {
 
         var viewer = new ImageViewer();
         viewer.setVisible(true);
-        if (args.length > 0) {
-            viewer.imagePanel.loadImage(new File(args[0]));
-        }
     }
 }

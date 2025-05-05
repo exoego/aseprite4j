@@ -6,18 +6,14 @@ import javax.swing.JFrame;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 
-
 public class ImageViewer extends JFrame {
-
-    final ImagePanel imagePanel;
-
     public ImageViewer() {
         final var viewer = this;
-        imagePanel = new ImagePanel();
+        final var imagePanel = new ImagePanel();
+        viewer.add(imagePanel);
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(800, 600);
-
 
         var buttonOpen = new JButton("Open...");
         buttonOpen.addActionListener((ActionEvent e) -> {
@@ -26,12 +22,9 @@ public class ImageViewer extends JFrame {
 
             var selectedFile = fileChooser.getSelectedFile();
             System.out.println("Selected file: " + selectedFile);
-            if (selectedFile != null) {
-                imagePanel.loadImage(selectedFile);
-                imagePanel.paintComponent(viewer.getGraphics());
-            }
-        });
 
-        getContentPane().add(buttonOpen, BorderLayout.PAGE_START);
+            imagePanel.loadImage(selectedFile);
+        });
+        viewer.add(buttonOpen, BorderLayout.PAGE_START);
     }
 }
