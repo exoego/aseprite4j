@@ -1,0 +1,1 @@
+rootProject.name = "aseprite4j"
