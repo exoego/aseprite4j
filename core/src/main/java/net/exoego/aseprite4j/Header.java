@@ -1,6 +1,5 @@
 package net.exoego.aseprite4j;
 
-import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
 
@@ -9,13 +8,13 @@ public interface Header {
 
     long getFileSize();
 
-    int getFrames();
+    int getNumberOfFrames();
 
-    int getWidth();
+    int getImageWidth();
 
-    int getHeight();
+    int getImageHeight();
 
-    int getColorDepth();
+    ColorDepth getColorDepth();
 
     long getFlags();
 
@@ -54,10 +53,10 @@ public interface Header {
         header.numFrames = reader.WORD();
         header.imageWidth = reader.WORD();
         header.imageHeight = reader.WORD();
-        header.colorDepth = reader.WORD();
+        header.colorDepth = ColorDepth.fromBitsPerPixel(reader.WORD());
         header.flags = reader.DWORD();
 
-        // DEPRECATED: You should use the frame duration field from each frame header
+        // speed is DEPRECATED: You should use the frame duration field from each frame header
         reader.WORD();
 
         // Set be 0

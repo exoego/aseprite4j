@@ -7,7 +7,7 @@ final class HeaderImpl implements Header {
     long flags;
 
     short transparentColorIndex;
-    int colorDepth;
+    ColorDepth colorDepth;
     int numberOfColors;
     short pixelWidth, pixelHeight;
     int gridX, gridY;
@@ -19,22 +19,22 @@ final class HeaderImpl implements Header {
     }
 
     @Override
-    public int getFrames() {
+    public int getNumberOfFrames() {
         return numFrames;
     }
 
     @Override
-    public int getWidth() {
+    public int getImageWidth() {
         return imageWidth;
     }
 
     @Override
-    public int getHeight() {
+    public int getImageHeight() {
         return imageHeight;
     }
 
     @Override
-    public int getColorDepth() {
+    public ColorDepth getColorDepth() {
         return colorDepth;
     }
 
