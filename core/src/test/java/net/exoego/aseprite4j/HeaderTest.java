@@ -2,7 +2,6 @@ package net.exoego.aseprite4j;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import org.junit.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
