@@ -1,5 +1,7 @@
 package net.exoego.aseprite4j;
 
+import java.util.EnumSet;
+
 final class HeaderImpl implements Header {
     long fileSize;
     int numFrames;
@@ -14,7 +16,7 @@ final class HeaderImpl implements Header {
     int gridWidth, gridHeight;
 
     @Override
-    public long getFileSize() {
+    public long getFileSizeInBytes() {
         return fileSize;
     }
 
@@ -39,7 +41,12 @@ final class HeaderImpl implements Header {
     }
 
     @Override
-    public long getFlags() {
+    public EnumSet<HeaderFlag> getFlagSet() {
+        return HeaderFlag.setFrom(flags);
+    }
+
+    @Override
+    public long getRawFlags() {
         return flags;
     }
 

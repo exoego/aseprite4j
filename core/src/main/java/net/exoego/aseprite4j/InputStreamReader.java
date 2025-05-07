@@ -13,12 +13,12 @@ final class InputStreamReader {
 
     static short toUnsignedByte(byte[] bytes) {
         assert bytes.length == 1;
-        return (short) (~bytes[0] + 1);
+        return (short) (0xFF & bytes[0]);
     }
 
     static short toShort(byte[] bytes) {
         assert bytes.length == 2;
-        return (short) ((bytes[1] << 8) | (0xFF & bytes[0]));
+        return (short) (((bytes[1] & 0xFF) << 8) | (bytes[0] & 0xFF));
     }
 
     static int toUnsignedShort(byte[] bytes) {
@@ -48,12 +48,8 @@ final class InputStreamReader {
         return bytes;
     }
 
-    long skip(int n) {
-        try {
-            return in.skip(n);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    void skip(int n) {
+        readNBytes(n);
     }
 
     /**

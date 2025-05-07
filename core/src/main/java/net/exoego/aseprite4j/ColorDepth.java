@@ -15,7 +15,7 @@ public enum ColorDepth {
         return bitsPerPixel;
     }
 
-    public static ColorDepth fromBitsPerPixel(int bitsPerPixel) {
+    public static ColorDepth from(int bitsPerPixel) {
         return switch (bitsPerPixel) {
             case 32 -> RGBA;
             case 16 -> Grayscale;
