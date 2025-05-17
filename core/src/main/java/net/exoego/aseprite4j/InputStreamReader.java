@@ -1,8 +1,6 @@
 package net.exoego.aseprite4j;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 final class InputStreamReader {
     private final InputStream in;
