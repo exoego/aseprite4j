@@ -1,7 +1,9 @@
+import org.gradle.internal.impldep.org.jsoup.nodes.Document
 import org.gradle.kotlin.dsl.testRuntimeOnly
 
 plugins {
     java
+    jacoco
 }
 
 group = "net.exoego"
@@ -9,6 +11,7 @@ version = "1.0-SNAPSHOT"
 
 subprojects {
     apply(plugin = "java")
+    apply(plugin = "jacoco")
 
     java {
         toolchain {
@@ -30,7 +33,15 @@ subprojects {
 }
 
 allprojects {
+    tasks.jacocoTestReport {
+        reports {
+            xml.required = true
+            csv.required = false
+        }
+    }
+
     tasks.test {
         useJUnitPlatform()
+        finalizedBy(tasks.jacocoTestReport)
     }
 }
