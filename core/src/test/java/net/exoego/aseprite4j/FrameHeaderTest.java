@@ -6,8 +6,18 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FrameHeaderTest {
+    @Test
+    public void throwsInvalidMagicNumber() {
+        var bios = new ByteArrayInputStream(new byte[]{
+                0x12, 0x00, 0x00, 0x00, // bytes in this frame
+                (byte) 0, (byte) 0, // magic number
+        });
+        assertThrows(IllegalArgumentException.class, () -> FrameHeaderImpl.read(new InputStreamReader(bios)));
+    }
+
     @Test
     public void basicRead() throws IOException {
         var bios = new ByteArrayInputStream(new byte[]{
