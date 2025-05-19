@@ -74,4 +74,10 @@ final class InputStreamReader {
     long DWORD() throws IOException {
         return toUnsignedInt(readNBytes(4));
     }
+
+    String STRING() throws IOException {
+        int len = WORD();
+        var buf = readNBytes(len);
+        return new String(buf);
+    }
 }
