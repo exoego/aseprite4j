@@ -37,7 +37,7 @@ final class InputStreamReader {
                 (bytes[0] & 0xFF);
     }
 
-    private byte[] readNBytes(int n) throws IOException {
+     byte[] readNBytes(int n) throws IOException {
         byte[] bytes = new byte[n];
         in.read(bytes);
         return bytes;
@@ -79,5 +79,14 @@ final class InputStreamReader {
         int len = WORD();
         var buf = readNBytes(len);
         return new String(buf);
+    }
+
+    double FIXED() throws IOException {
+        double num0 = WORD();
+        double num1 = WORD();
+        while (num1 > 0) {
+            num1 /= 10.0;
+        }
+        return num0 + num1;
     }
 }

@@ -1,8 +1,9 @@
 package net.exoego.aseprite4j;
 
 import java.io.IOException;
+import java.util.List;
 
-public final class PaletteChunk implements FrameChunk {
+public record PaletteChunk(List<Color> palette) implements FrameChunk {
     static PaletteChunk build(InputStreamReader reader) throws IOException {
         var paletteSize = (int) reader.DWORD();
         var firstColorIndex = (int) reader.DWORD();
@@ -25,6 +26,6 @@ public final class PaletteChunk implements FrameChunk {
             palette[i] = color;
         }
 
-        throw new UnsupportedOperationException();
+        return new PaletteChunk(List.of(palette));
     }
 }
