@@ -1,5 +1,6 @@
 package net.exoego.aseprite4j;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -99,17 +100,19 @@ public interface Header {
      */
     int getGridHeight();
 
-    static Header read(Path path) {
+    static Header read(Path path) throws IOException {
         try (var in = java.nio.file.Files.newInputStream(path)) {
             return read(in);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
-    static Header read(InputStream in) {
-        var header = new HeaderImpl();
+    static Header read(InputStream in) throws IOException {
         var reader = new InputStreamReader(in);
+        return read(reader);
+    }
+
+    static Header read(InputStreamReader reader) throws IOException {
+        var header = new HeaderImpl();
         header.fileSize = reader.DWORD();
         var magicNumber = reader.WORD();
         if (magicNumber != MAGIC_NUMBER) {

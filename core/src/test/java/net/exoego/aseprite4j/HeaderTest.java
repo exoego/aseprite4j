@@ -1,14 +1,26 @@
 package net.exoego.aseprite4j;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.io.ByteArrayInputStream;
 import java.nio.file.Paths;
 
 public class HeaderTest {
+    @Test
+    public void throwsInvalidMagicNumber() {
+        var bios = new ByteArrayInputStream(new byte[]{
+                0x12, 0x00, 0x00, 0x00, // bytes in this frame
+                (byte) 0, (byte) 0, // magic number
+        });
+        assertThrows(IllegalArgumentException.class, () -> Header.read(new InputStreamReader(bios)));
+    }
+
     @ParameterizedTest
     @CsvSource({
             "cut_paste, 348",
