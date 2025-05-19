@@ -2,7 +2,7 @@ package net.exoego.aseprite4j;
 
 import java.io.IOException;
 
-public final class UnknownChunk implements FrameChunk {
+final class UnknownChunk implements FrameChunk {
     private static final UnknownChunk INSTANCE = new UnknownChunk();
 
     static UnknownChunk build(InputStreamReader reader, int type, int chunkSize) throws IOException {
