@@ -23,7 +23,7 @@ class FrameChunkFactory {
             case 0x2020 -> UserDataChunk.build(reader);
             case 0x2022 -> SliceChunk.build(reader);
             case 0x2023 -> TilesetChunk.build(reader);
-            default -> UnknownChunk.build(reader, chunkSize);
+            default -> UnknownChunk.build(reader, type, chunkSize);
         };
     }
 }
