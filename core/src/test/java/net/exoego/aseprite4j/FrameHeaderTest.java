@@ -3,12 +3,13 @@ package net.exoego.aseprite4j;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 import static com.google.common.truth.Truth.assertThat;
 
 public class FrameHeaderTest {
     @Test
-    public void basicRead() {
+    public void basicRead() throws IOException {
         var bios = new ByteArrayInputStream(new byte[]{
                 0x12, 0x00, 0x00, 0x00, // bytes in this frame
                 (byte) 0xFA, (byte) 0xF1, // magic number
@@ -24,7 +25,7 @@ public class FrameHeaderTest {
     }
 
     @Test
-    public void newGetNumberOfChunks() {
+    public void newGetNumberOfChunks() throws IOException {
         var bios = new ByteArrayInputStream(new byte[]{
                 0x41, 0x00, 0x00, 0x00, // bytes in this frame
                 (byte) 0xFA, (byte) 0xF1, // magic number

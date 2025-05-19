@@ -37,83 +37,41 @@ final class InputStreamReader {
                 (bytes[0] & 0xFF);
     }
 
-    private byte[] readNBytes(int n) {
+    private byte[] readNBytes(int n) throws IOException {
         byte[] bytes = new byte[n];
-        try {
-            in.read(bytes);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        in.read(bytes);
         return bytes;
     }
 
-    void skip(int n) {
-        try {
-            in.skipNBytes(n);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    void skip(int n) throws IOException {
+        in.skipNBytes(n);
     }
 
     /**
      * An 8-bit unsigned integer value
      */
-    short BYTE() {
+    short BYTE() throws IOException {
         return toUnsignedByte(readNBytes(1));
-    }
-
-    short[] BYTE(int n) {
-        byte[] bytes = readNBytes(1);
-        short[] result = new short[n];
-        for (int i = 0; i < n; i++) {
-            result[i] = toUnsignedByte(bytes);
-        }
-        return result;
     }
 
     /**
      * A 16-bit unsigned integer value
      */
-    int WORD() {
+    int WORD() throws IOException {
         return toUnsignedShort(readNBytes(2));
     }
 
     /**
      * A 16-bit signed integer value
      */
-    int SHORT() {
+    int SHORT() throws IOException {
         return toShort(readNBytes(2));
     }
 
     /**
      * A 32-bit unsigned integer value
      */
-    long DWORD() {
+    long DWORD() throws IOException {
         return toUnsignedInt(readNBytes(4));
     }
-
-    /**
-     * A 32-bit signed integer value
-     */
-    int LONG(int index) {
-        return toInt(readNBytes(4));
-    }
-//
-//    /**
-//     * STRING:
-//     * - WORD: string length (number of bytes)
-//     * - BYTE[length]: characters (in UTF-8) The '\0' character is not included.
-//     */
-//    String STRING(int index) {
-//        int length = stringLength(index);
-//        byte[] dst = new byte[length];
-//        byteBuffer.position(index + 2);
-//        byteBuffer.get(dst, 0, length);
-//        return new String(dst, StandardCharsets.UTF_8);
-//    }
-//
-//    private int stringLength(int index) {
-//        return WORD(index);
-//    }
-
 }

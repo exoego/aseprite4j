@@ -1,7 +1,9 @@
 package net.exoego.aseprite4j;
 
+import java.io.IOException;
+
 class FrameChunkFactory {
-    static FrameChunk read(InputStreamReader reader) {
+    static FrameChunk read(InputStreamReader reader) throws IOException {
         var size = reader.DWORD();
         var type = reader.WORD();
         int chunkSize = Math.toIntExact(size - 6); // size includes type and size itself

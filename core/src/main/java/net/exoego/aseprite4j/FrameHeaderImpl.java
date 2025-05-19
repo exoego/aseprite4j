@@ -1,7 +1,9 @@
 package net.exoego.aseprite4j;
 
+import java.io.IOException;
+
 record FrameHeaderImpl(long bytesInThisFrame, int frameDuration, long getNumberOfChunks) implements FrameHeader {
-    static FrameHeader read(InputStreamReader reader) {
+    static FrameHeader read(InputStreamReader reader) throws IOException {
         var bytesInThisFrame = reader.DWORD();
         var magicNumber = reader.WORD();
         if (magicNumber != 0xF1FA) {

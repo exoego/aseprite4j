@@ -1,7 +1,9 @@
 package net.exoego.aseprite4j;
 
+import java.io.IOException;
+
 record FrameImpl(FrameHeader header, FrameChunk[] chunks) implements Frame {
-    static Frame read(InputStreamReader reader) {
+    static Frame read(InputStreamReader reader) throws IOException {
         var header = FrameHeaderImpl.read(reader);
 
         final int lenExact = Math.toIntExact(header.getNumberOfChunks());

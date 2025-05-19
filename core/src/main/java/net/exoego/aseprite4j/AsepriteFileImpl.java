@@ -18,8 +18,6 @@ record AsepriteFileImpl(Header header, List<Frame> frames) implements AsepriteFi
                 frames.add(frame);
             }
             return new AsepriteFileImpl(header, frames);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 }

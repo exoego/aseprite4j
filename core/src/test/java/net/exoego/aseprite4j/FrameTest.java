@@ -5,13 +5,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.file.Paths;
 
 import static com.google.common.truth.Truth.assertThat;
 
 public class FrameTest {
     @Test
-    public void basicRead() {
+    public void basicRead() throws IOException {
         var bios = new ByteArrayInputStream(new byte[]{
                 0x12, 0x00, 0x00, 0x00, // bytes in this frame
                 (byte) 0xFA, (byte) 0xF1, // magic number
