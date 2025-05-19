@@ -8,9 +8,6 @@ class FrameChunkFactory {
         var type = reader.WORD();
         int chunkSize = Math.toIntExact(size - 6); // size includes type and size itself
 
-        // TODO
-        reader.skip(chunkSize);
-
         return switch (type) {
             case 0x0004 -> OldPaletteChunk4.build(reader);
             case 0x0011 -> OldPaletteChunk11.build(reader);
