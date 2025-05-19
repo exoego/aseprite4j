@@ -108,8 +108,12 @@ public interface Header {
     }
 
     static Header read(InputStream in) {
-        var header = new HeaderImpl();
         var reader = new InputStreamReader(in);
+        return read(reader);
+    }
+
+    static Header read(InputStreamReader reader) {
+        var header = new HeaderImpl();
         header.fileSize = reader.DWORD();
         var magicNumber = reader.WORD();
         if (magicNumber != MAGIC_NUMBER) {

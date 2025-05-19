@@ -1,5 +1,6 @@
 package net.exoego.aseprite4j;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 final class InputStreamReader {
@@ -47,7 +48,11 @@ final class InputStreamReader {
     }
 
     void skip(int n) {
-        readNBytes(n);
+        try {
+            in.skipNBytes(n);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -55,6 +60,15 @@ final class InputStreamReader {
      */
     short BYTE() {
         return toUnsignedByte(readNBytes(1));
+    }
+
+    short[] BYTE(int n) {
+        byte[] bytes = readNBytes(1);
+        short[] result = new short[n];
+        for (int i = 0; i < n; i++) {
+            result[i] = toUnsignedByte(bytes);
+        }
+        return result;
     }
 
     /**
