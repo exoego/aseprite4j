@@ -5,23 +5,24 @@ import java.io.IOException;
 public record ColorProfileChunk(ColorProfile type, double gamma) implements FrameChunk {
     static ColorProfileChunk build(InputStreamReader reader) throws IOException {
         var type = reader.WORD();
-        // what is this?
+
         var flags = reader.WORD();
+        if ((flags & 0x1) != 0) {
+            // use special fixed gamma
+            // what is this?
+        }
+
         var gamma = reader.FIXED();
 
-        var iccType = switch (type) {
-            case 0 -> ColorProfile.EmbeddedICC;
-            case 1 -> ColorProfile.NoColorProfile;
-            case 2 -> ColorProfile.sRGB;
-            default -> throw new IllegalArgumentException("Invalid color profile type: " + type);
-        };
+        var iccType = ColorProfile.from(type);
 
-        reader.skip(8); // reserved
+        // reserved
+        reader.skip(8);
 
         if (type == ColorProfile.EmbeddedICC.value) {
             var iccProfileLength = reader.DWORD();
             // TODO: support icc profile?
-            reader.skip((int) iccProfileLength);
+            reader.skip(iccProfileLength);
         }
 
         return new ColorProfileChunk(iccType, gamma);

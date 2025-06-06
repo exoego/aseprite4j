@@ -11,10 +11,10 @@ record AsepriteFileImpl(Header header, List<Frame> frames) implements AsepriteFi
             var reader = new InputStreamReader(in);
 
             var header = Header.read(reader);
-            int numberOfFrames = header.getNumberOfFrames();
+            int numberOfFrames = header.numberOfFrames();
             var frames = new ArrayList<Frame>(numberOfFrames);
             for (int i = 0; i < numberOfFrames; i++) {
-                var frame = FrameImpl.read(reader);
+                var frame = FrameImpl.read(reader, header.colorDepth());
                 frames.add(frame);
             }
             return new AsepriteFileImpl(header, frames);

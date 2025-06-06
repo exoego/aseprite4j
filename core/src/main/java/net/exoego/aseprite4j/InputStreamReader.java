@@ -2,6 +2,7 @@ package net.exoego.aseprite4j;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 final class InputStreamReader {
     private final InputStream in;
@@ -47,6 +48,10 @@ final class InputStreamReader {
         in.skipNBytes(n);
     }
 
+    void skip(long n) throws IOException {
+        in.skipNBytes(n);
+    }
+
     /**
      * An 8-bit unsigned integer value
      */
@@ -79,6 +84,41 @@ final class InputStreamReader {
         int len = WORD();
         var buf = readNBytes(len);
         return new String(buf);
+    }
+
+    UUID UUID() throws IOException {
+        var uuidBytes = readNBytes(16);
+        return UUID.nameUUIDFromBytes(uuidBytes);
+    }
+
+    Pixel PIXEL(ColorDepth depth) throws IOException {
+        return switch (depth) {
+            case RGBA -> {
+                short r = BYTE();
+                short g = BYTE();
+                short b = BYTE();
+                short a = BYTE();
+                yield new Pixel.RGBA(r, g, b, a);
+            }
+            case Grayscale -> {
+                short value = BYTE();
+                short alpha = BYTE();
+                yield new Pixel.Grayscale(value, alpha);
+            }
+            case Indexed -> {
+                short index = BYTE();
+                yield new Pixel.Index(index);
+            }
+        };
+    }
+
+    Tile TILE(int bitsPerTile) throws  IOException {
+        return switch (bitsPerTile) {
+            case 8 -> new Tile.Tile8(BYTE());
+            case 16 -> new Tile.Tile16(WORD());
+            case 32 -> new Tile.Tile32(DWORD());
+            default -> throw new IllegalArgumentException("Unsupported bits per tile: " + bitsPerTile);
+        };
     }
 
     double FIXED() throws IOException {
