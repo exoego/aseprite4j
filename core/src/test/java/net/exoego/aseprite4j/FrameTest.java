@@ -40,10 +40,10 @@ public class FrameTest {
 //            "file-tests-props, 6",
 //            "tags3x123reps, 9",
     })
-    void getFrames(String filename, int expected) throws Exception {
+    void getFrames(String filename, int expectedNumFrames) throws Exception {
         var path = Paths.get(FrameTest.class.getResource("/aseprite/sprites/" + filename + ".aseprite").toURI());
         var file = AsepriteFile.read(path);
         assertThat(file.frames()).hasSize(file.header().numberOfFrames());
-        assertThat(file.frames()).hasSize(expected);
+        assertThat(file.frames()).hasSize(expectedNumFrames);
     }
 }
