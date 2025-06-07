@@ -115,7 +115,7 @@ public interface Header {
         var fileSize = reader.DWORD();
         var magicNumber = reader.WORD();
         if (magicNumber != MAGIC_NUMBER) {
-            throw new IllegalArgumentException("Invalid magic number: " + Integer.toHexString(magicNumber));
+            throw new IllegalArgumentException("Invalid file header magic number: " + Integer.toHexString(magicNumber));
         }
         var numFrames = reader.WORD();
         var imageWidth = reader.WORD();

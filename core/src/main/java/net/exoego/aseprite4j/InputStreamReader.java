@@ -2,9 +2,10 @@ package net.exoego.aseprite4j;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.UUID;
 
-final class InputStreamReader {
+public final class InputStreamReader {
     private final InputStream in;
 
     InputStreamReader(InputStream in) {
@@ -74,6 +75,25 @@ final class InputStreamReader {
     }
 
     /**
+     * A 32-bit signed integer value
+     */
+    int INT32() throws IOException {
+        return toInt(readNBytes(2));
+    }
+
+    /**
+     * A 64-bit signed integer value
+     */
+    long INT64() throws IOException {
+        return toUnsignedInt(readNBytes(2));
+    }
+
+    BigInteger QWORD() throws IOException {
+        throw new UnsupportedOperationException("QWORD is not supported in this implementation");
+    }
+
+
+    /**
      * A 32-bit unsigned integer value
      */
     long DWORD() throws IOException {
@@ -129,4 +149,31 @@ final class InputStreamReader {
         }
         return num0 + num1;
     }
+
+    float FLOAT() throws IOException {
+        throw new UnsupportedOperationException("FLOAT is not supported in this implementation");
+    }
+
+    float DOUBLE() throws IOException {
+        throw new UnsupportedOperationException("DOUBLE is not supported in this implementation");
+    }
+
+    float POINT() throws IOException {
+        throw new UnsupportedOperationException("DOUBLE is not supported in this implementation");
+    }
+
+    float SIZE() throws IOException {
+        throw new UnsupportedOperationException("DOUBLE is not supported in this implementation");
+    }
+
+    float RECT() throws IOException {
+        throw new UnsupportedOperationException("DOUBLE is not supported in this implementation");
+    }
+
+    byte[] deflateZlib() throws IOException {
+        var deflaterOutputStream = new java.util.zip.DeflaterInputStream(in);
+        var deflated = deflaterOutputStream.readAllBytes();
+        return deflated;
+    }
+
 }

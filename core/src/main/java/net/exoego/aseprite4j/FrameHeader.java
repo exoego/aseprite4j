@@ -5,5 +5,5 @@ public interface FrameHeader {
 
     int frameDuration();
 
-    long getNumberOfChunks();
+    long numberOfChunks();
 }

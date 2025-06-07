@@ -37,24 +37,27 @@ public interface CelChunk extends FrameChunk {
                         pixels[xy] = reader.PIXEL(colorDepth);
                     }
                 }
-                yield new RawImageData(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex, widthInPixels, heightInPixels, pixels);
+                yield new RawImageDataCelChunk(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex, widthInPixels, heightInPixels, pixels);
             }
 
             case LINKED_CEL -> {
                 var framePositionToLinkWith = reader.WORD();
-                yield new LinkedCel(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex, framePositionToLinkWith);
+                yield new LinkedCelCelChunk(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex, framePositionToLinkWith);
             }
             case COMPRESSED_IMAGE -> {
                 var widthInPixels = reader.WORD();
                 var heightInPixels = reader.WORD();
+
                 var pixels = new Pixel[heightInPixels * widthInPixels];
-                for (int y = 0; y < heightInPixels; y++) {
-                    for (int x = 0; x < widthInPixels; x++) {
-                        var xy = y * widthInPixels + x;
-                        pixels[xy] = reader.PIXEL(colorDepth);
-                    }
-                }
-                yield new CompressedImage(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex, widthInPixels, heightInPixels, pixels);
+                // TODO: decode
+                reader.deflateZlib();
+//                for (int y = 0; y < heightInPixels; y++) {
+//                    for (int x = 0; x < widthInPixels; x++) {
+//                        var xy = y * widthInPixels + x;
+//                        pixels[xy] = reader.PIXEL(colorDepth);
+//                    }
+//                }
+                yield new CompressedImageCelChunk(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex, widthInPixels, heightInPixels, pixels);
             }
             case COMPRESSED_TILEMAP -> {
                 var widthInNumberOfTiles = reader.WORD();
@@ -64,24 +67,27 @@ public interface CelChunk extends FrameChunk {
                 var bitmaskFoxXFlip = reader.DWORD();
                 var bitmaskForYFlip = reader.DWORD();
                 var bitmaskForDiagonalFlip = reader.DWORD();
+
                 // reserved
                 reader.skip(10);
 
                 var tileData = new Tile[heightInNumberOfTiles * widthInNumberOfTiles];
-                for (int y = 0; y < heightInNumberOfTiles; y++) {
-                    for (int x = 0; x < widthInNumberOfTiles; x++) {
-                        var xy = y * widthInNumberOfTiles + x;
-                        tileData[xy] = reader.TILE(bitsPerTile);
-                    }
-                }
-                yield new CompressedTilemap(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex,
+                // TODO: decode
+                reader.deflateZlib();
+//                for (int y = 0; y < heightInNumberOfTiles; y++) {
+//                    for (int x = 0; x < widthInNumberOfTiles; x++) {
+//                        var xy = y * widthInNumberOfTiles + x;
+//                        tileData[xy] = reader.TILE(bitsPerTile);
+//                    }
+//                }
+                yield new CompressedTilemapCelChunk(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex,
                         widthInNumberOfTiles, heightInNumberOfTiles, bitsPerTile, bitmaskForTileId, bitmaskFoxXFlip,
                         bitmaskForYFlip, bitmaskForDiagonalFlip, tileData);
             }
         };
     }
 
-    record RawImageData(
+    record RawImageDataCelChunk(
             int layerIndex,
             int xPosition,
             int yPosition,
@@ -94,7 +100,7 @@ public interface CelChunk extends FrameChunk {
     ) implements CelChunk {
     }
 
-    record LinkedCel(
+    record LinkedCelCelChunk(
             int layerIndex,
             int xPosition,
             int yPosition,
@@ -105,7 +111,7 @@ public interface CelChunk extends FrameChunk {
     ) implements CelChunk {
     }
 
-    record CompressedImage(
+    record CompressedImageCelChunk(
             int layerIndex,
             int xPosition,
             int yPosition,
@@ -118,7 +124,7 @@ public interface CelChunk extends FrameChunk {
     ) implements CelChunk {
     }
 
-    record CompressedTilemap(
+    record CompressedTilemapCelChunk(
             int layerIndex,
             int xPosition,
             int yPosition,
