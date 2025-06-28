@@ -1,6 +1,7 @@
 package net.exoego.aseprite4j;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Set;
 
 public record TilesetChunk(long tilesetId, Set<TilesetFlag> tilesetFlagSet, long numberOfTiles, int tileWidth, int tileHeight, int baseIndex, String name) implements FrameChunk {
@@ -25,11 +26,9 @@ public record TilesetChunk(long tilesetId, Set<TilesetFlag> tilesetFlagSet, long
 
         if (tilsetFlags.contains(TilesetFlag.INCLUDE_TILES_INSIDE_THIS_FILE)) {
             var dataLengthOfCompressedTilesetImage = reader.DWORD();
-            int size = (int) (tileWidth * tileHeight * numberOfTiles);
-            var compressedTilesetImage = new Pixel[size];
-            for (int i = 0; i < size; i++) {
-                compressedTilesetImage[i] = reader.PIXEL(colorDepth);
-            }
+            var deflater = reader.asDeflateZlib(Math.toIntExact(dataLengthOfCompressedTilesetImage));
+            int size = Math.toIntExact(tileWidth * tileHeight * numberOfTiles);
+            var compressedTilesetImage = deflater.PIXELS(size, colorDepth);
         }
 
         return new TilesetChunk(tilesetId, tilsetFlags, numberOfTiles,

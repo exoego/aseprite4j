@@ -136,16 +136,16 @@ struct LayerChunk {
   }
 };
 
-struct PIXEL {
+struct PIXEL<T> {
 /*
    - **RGBA**: `BYTE[4]`, each pixel have 4 bytes in this order Red, Green, Blue, Alpha.
     - **Grayscale**: `BYTE[2]`, each pixel have 2 bytes in the order Value, Alpha.
     - **Indexed**: `BYTE`, each pixel uses 1 byte (the index).
 */
-   u8 colorIndex;
+   T colorIndex;
 };
 
-struct CelChunk<auto Size> {
+struct CelChunk<T, auto Size> {
   u16 layerIndex;
   s16 xPos;
   s16 yPos;
@@ -171,7 +171,7 @@ struct CelChunk<auto Size> {
     (0x0):  { // raw pixel cel
        u16 widthInPixels;
        u16 heightInPixels;
-       PIXEL rawPixelData[];
+       PIXEL<T> rawPixelData[];
      }
      (0x1): { // linked cel
         u16 framePosition;
@@ -230,17 +230,48 @@ struct UserDataChunk {
 };
 struct SliceChunk {
 };
-struct TilesetChunk {
+struct TilesetChunk<T> {
+   u32 tilesetId;
+   u32 flags;
+   /*
+    DWORD       Tileset flags
+                  1 - Include link to external file
+                  2 - Include tiles inside this file
+                  4 - Tilemaps using this tileset use tile ID=0 as empty tile
+                      (this is the new format). In rare cases this bit is off,
+                      and the empty tile will be equal to 0xffffffff (used in
+                      internal versions of Aseprite)
+                  8 - Aseprite will try to match modified tiles with their X
+                      flipped version automatically in Auto mode when using
+                      this tileset.
+                  16 - Same for Y flips
+                  32 - Same for D(iagonal) flips*/
+    u32 numberOfTiles;
+    u16 tileWidth;
+    u16 tileHeight;
+    s16 baseIndex;
+    u8 reserved[14];
+    STRING name;
+
+    if (flags & 0x1) {
+      u32 externalFileId;
+      u32 tilesetIdInExternalFile;
+    }
+    if (flags & 0x2) {
+      u32 dataLengthOfCompressedTilesetImage;
+      PIXEL<T> compressedTilesetImage[tileWidth * tileHeight * numberOfTiles];
+//                  (Tile Width) x (Tile Height x Number of Tiles)
+ }
 };
 
-struct FrameChunk {
+struct FrameChunk<T> {
   u32 chunkSize;
   u16 chunkType;
 
   match (chunkType) {
     (0x0004): OldPalletteChunk oldPalleteChunk;
     (0x2004): LayerChunk layerChunk;
-    (0x2005): CelChunk<chunkSize - 6> celChunk;
+    (0x2005): CelChunk<T, chunkSize - 6> celChunk;
     (0x2006): CelExtraChunk celExtraChunk;
     (0x2007): ColorProfileChunk colorProfileChunk;
     (0x2008): ExternalFileChunk externalFileChunk;
@@ -250,15 +281,24 @@ struct FrameChunk {
     (0x2019): PaletteChunk paletteChunk;
     (0x2020): UserDataChunk userDataChunk;
     (0x2022): SliceChunk sliceChunk;
-    (0x2023): TilesetChunk tilesetChunk;
+    (0x2023): TilesetChunk<T> tilesetChunk;
   }
 };
 
 
 
+u32 colorDepth @ 0x0000000C;
+
 struct Frame {
   FrameHeader header;
-  FrameChunk chunk[header.newNumChunks];
+
+  if (colorDepth & 0x20) {
+    FrameChunk<u32> chunk[header.newNumChunks];
+  } else if (colorDepth & 0x10) {
+    FrameChunk<u16> chunk[header.newNumChunks];
+  } else {
+    FrameChunk<u8> chunk[header.newNumChunks];
+  }
 };
 
 struct Aseprite {
@@ -266,8 +306,8 @@ struct Aseprite {
   Frame frames[header.frames];
 };
 
-Aseprite Aseprite_at_0x00 @ 0x00;
 
+Aseprite Aseprite_at_0x00 @ 0x00;
 
 //FileHeader fileheader_at_0x00 @ 0x00;
 //FrameHeader frameheader_at_0x80 @ 0x80;

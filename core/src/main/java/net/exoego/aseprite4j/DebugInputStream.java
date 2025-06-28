@@ -9,6 +9,9 @@ final class DebugInputStream extends InputStream {
 
     private final ArrayDeque<Integer> buffer = new ArrayDeque<>();
 
+    private int prevBeginAddress;
+    private int prevEndAddress;
+
     DebugInputStream(InputStream in) {
         this.in = in;
     }
@@ -38,11 +41,21 @@ final class DebugInputStream extends InputStream {
         var count = 0;
         var line = 0;
 
+        if (prevEndAddress == 0) {
+            builder.append("initial read\n");
+        } else {
+            builder.append(String.format("last read %08X - %08x\n", prevBeginAddress, prevEndAddress));
+        }
+
         builder.append("Address   00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n");
 
+        prevBeginAddress = prevEndAddress;
         while (!buffer.isEmpty()) {
             if (count == 0) {
                 builder.append(String.format("%08X: ", line * 16));
+            }
+            if (prevEndAddress == count + line * 16) {
+                prevEndAddress++;
             }
             var b1 = buffer.pop();
             count++;
@@ -53,6 +66,7 @@ final class DebugInputStream extends InputStream {
                 line++;
             }
         }
+
         builder.append('\n');
         return builder.toString();
     }
