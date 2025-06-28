@@ -33,8 +33,8 @@ public class FrameTest {
 
     @ParameterizedTest
     @CsvSource({
-            "2x2tilemap2x2tile, 1",
-//            "2f-index-3x3, 2",
+//            "2x2tilemap2x2tile, 1",
+            "2f-index-3x3, 2",
 //            "1empty3, 3",
 //            "4f-index-4x4, 4",
 //            "file-tests-props, 6",
@@ -65,7 +65,7 @@ public class FrameTest {
         assertThat(frameChunks.get(2)).isInstanceOf(LayerChunk.class);
         assertThat(frameChunks.get(3)).isInstanceOf(LayerChunk.class);
         assertThat(frameChunks.get(4)).isInstanceOf(CelChunk.class);
-        assertThat(frameChunks.get(5)).isInstanceOf(UnknownChunk.class);
+        assertThat(frameChunks.get(5)).isInstanceOf(CelChunk.class);
     }
 
     @Test

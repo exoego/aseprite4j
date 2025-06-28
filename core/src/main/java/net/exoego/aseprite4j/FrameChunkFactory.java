@@ -8,11 +8,13 @@ class FrameChunkFactory {
         var type = reader.WORD();
         int chunkSize = Math.toIntExact(size - 6); // size includes type and size itself
 
+        System.out.println("raw chunk size: " + size);
+        System.out.println("exact chunk size: " + chunkSize);
         return switch (type) {
             case 0x0004 -> OldPaletteChunk4.build(reader);
             case 0x0011 -> OldPaletteChunk11.build(reader);
             case 0x2004 -> LayerChunk.build(reader);
-            case 0x2005 -> CelChunk.build(reader, colorDepth);
+            case 0x2005 -> CelChunk.build(reader, chunkSize, colorDepth);
             case 0x2006 -> CelExtraChunk.build(reader);
             case 0x2007 -> ColorProfileChunk.build(reader);
             case 0x2008 -> ExternalFilesChunk.build(reader);

@@ -15,16 +15,19 @@ public interface CelChunk extends FrameChunk {
 
     int zIndex();
 
-    static CelChunk build(InputStreamReader reader, ColorDepth colorDepth) throws IOException {
-        var layerIndex = reader.WORD();
-        var xPosition = reader.SHORT();
-        var yPosition = reader.SHORT();
-        var opacityLevel = reader.BYTE();
-        var celType = CelType.from(reader.WORD());
-        var zIndex = reader.SHORT();
+    static CelChunk build(InputStreamReader reader, int wholeChunkSize, ColorDepth colorDepth) throws IOException {
+        var layerIndex = reader.WORD(); // 2 bits
+        var xPosition = reader.SHORT(); // 2 bits
+        var yPosition = reader.SHORT(); // 2 bits
+        var opacityLevel = reader.BYTE(); // 1 bit
+        var celType = CelType.from(reader.WORD()); // 2 bits
+        var zIndex = reader.SHORT(); // 2 bits
 
         // future
-        reader.skip(5);
+        reader.skip(5); // 5 bits
+
+        var restOfChunkSize = wholeChunkSize - 16;
+        System.out.println("wholeChunkSize: " + wholeChunkSize);
 
         return switch (celType) {
             case RAW_IMAGE_DATA -> {
@@ -45,18 +48,10 @@ public interface CelChunk extends FrameChunk {
                 yield new LinkedCelCelChunk(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex, framePositionToLinkWith);
             }
             case COMPRESSED_IMAGE -> {
-                var widthInPixels = reader.WORD();
-                var heightInPixels = reader.WORD();
-
-                var pixels = new Pixel[heightInPixels * widthInPixels];
-                // TODO: decode
-                reader.deflateZlib();
-//                for (int y = 0; y < heightInPixels; y++) {
-//                    for (int x = 0; x < widthInPixels; x++) {
-//                        var xy = y * widthInPixels + x;
-//                        pixels[xy] = reader.PIXEL(colorDepth);
-//                    }
-//                }
+                var widthInPixels = reader.WORD(); // 2 bits
+                var heightInPixels = reader.WORD(); // 2 bits
+                var deflater = reader.asDeflateZlib(restOfChunkSize - 4);
+                var pixels = deflater.PIXELS(heightInPixels * widthInPixels, colorDepth);
                 yield new CompressedImageCelChunk(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex, widthInPixels, heightInPixels, pixels);
             }
             case COMPRESSED_TILEMAP -> {
@@ -73,7 +68,7 @@ public interface CelChunk extends FrameChunk {
 
                 var tileData = new Tile[heightInNumberOfTiles * widthInNumberOfTiles];
                 // TODO: decode
-                reader.deflateZlib();
+//                reader.deflateZlib();
 //                for (int y = 0; y < heightInNumberOfTiles; y++) {
 //                    for (int x = 0; x < widthInNumberOfTiles; x++) {
 //                        var xy = y * widthInNumberOfTiles + x;

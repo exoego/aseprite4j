@@ -25,4 +25,12 @@ record Frame(FrameHeader header, List<FrameChunk> chunks) {
 
         return new Frame(header, chunks);
     }
+
+    @Override
+    public String toString() {
+        return "Frame{" +
+                "header=" + header +
+                ",\n chunks=[\n" + chunks.stream().map(s -> "    " + s).collect(java.util.stream.Collectors.joining(",\n")) +
+                "]}";
+    }
 }

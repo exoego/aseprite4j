@@ -7,7 +7,8 @@ record FrameHeaderImpl(long bytesInThisFrame, int frameDuration, long numberOfCh
         var bytesInThisFrame = reader.DWORD();
         var magicNumber = reader.WORD();
         if (magicNumber != 0xF1FA) {
-            throw new IllegalArgumentException("Invalid frame header magic number: " + magicNumber);
+            throw new IllegalArgumentException("Invalid frame header magic number: "
+                    + magicNumber + " at " + reader.currentAddress());
         }
         var oldNumberOfChunks = reader.WORD();
 

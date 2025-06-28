@@ -11,7 +11,6 @@ public record PaletteChunk(List<Color.RGBA> palette) implements FrameChunk {
         // reserved
         reader.skip(8);
 
-
         var palette = new Color.RGBA[paletteSize];
 
         var from = firstColorIndex;

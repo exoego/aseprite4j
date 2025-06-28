@@ -7,7 +7,7 @@ final class UnknownChunk implements FrameChunk {
 
     static UnknownChunk build(InputStreamReader reader, int type, int chunkSize) throws IOException {
         try {
-            // TODO: warn about unknown chunk type
+            System.out.println("Reading unknown chunk type: " + type + ", size: " + chunkSize);
             reader.skip(chunkSize);
             return INSTANCE;
         } catch (IOException e) {

@@ -1,15 +1,21 @@
 package net.exoego.aseprite4j;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.UUID;
+import java.util.zip.DeflaterInputStream;
 
 public final class InputStreamReader {
-    private final InputStream in;
+    private final DebugInputStream in;
 
     InputStreamReader(InputStream in) {
-        this.in = in;
+        this.in = new DebugInputStream(in);
+    }
+
+    public String currentAddress() {
+        return this.in.currentAddress();
     }
 
     static short toUnsignedByte(byte[] bytes) {
@@ -39,7 +45,7 @@ public final class InputStreamReader {
                 (bytes[0] & 0xFF);
     }
 
-     byte[] readNBytes(int n) throws IOException {
+    byte[] readNBytes(int n) throws IOException {
         byte[] bytes = new byte[n];
         in.read(bytes);
         return bytes;
@@ -132,7 +138,7 @@ public final class InputStreamReader {
         };
     }
 
-    Tile TILE(int bitsPerTile) throws  IOException {
+    Tile TILE(int bitsPerTile) throws IOException {
         return switch (bitsPerTile) {
             case 8 -> new Tile.Tile8(BYTE());
             case 16 -> new Tile.Tile16(WORD());
@@ -170,10 +176,23 @@ public final class InputStreamReader {
         throw new UnsupportedOperationException("DOUBLE is not supported in this implementation");
     }
 
-    byte[] deflateZlib() throws IOException {
-        var deflaterOutputStream = new java.util.zip.DeflaterInputStream(in);
-        var deflated = deflaterOutputStream.readAllBytes();
-        return deflated;
+    InputStreamReader asDeflateZlib(int chunkSize) throws IOException {
+        // 2 extra bytes to ignore
+        // 不要?
+        //        this.skip(2);
+
+        var bytes = this.readNBytes(chunkSize);
+//        var bytes = in.readNBytes(chunkSize);
+        var bais = new ByteArrayInputStream(bytes);
+        var dis = new DeflaterInputStream(bais);
+        return new InputStreamReader(dis);
     }
 
+    Pixel[] PIXELS(int size, ColorDepth colorDepth) throws IOException {
+        var pixels = new Pixel[size];
+        for (int i = 0; i < pixels.length; i++) {
+            pixels[i] = this.PIXEL(colorDepth);
+        }
+        return pixels;
+    }
 }
