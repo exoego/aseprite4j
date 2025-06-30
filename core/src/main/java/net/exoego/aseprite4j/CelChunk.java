@@ -50,8 +50,8 @@ public interface CelChunk extends FrameChunk {
             case COMPRESSED_IMAGE -> {
                 var widthInPixels = reader.WORD(); // 2 bits
                 var heightInPixels = reader.WORD(); // 2 bits
-                var deflater = reader.asDeflateZlib(restOfChunkSize - 4);
-                var pixels = deflater.PIXELS(heightInPixels * widthInPixels, colorDepth);
+                var pixels = reader.deflatePixels(restOfChunkSize - 4,
+                        heightInPixels * widthInPixels, colorDepth);
                 yield new CompressedImageCelChunk(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex, widthInPixels, heightInPixels, pixels);
             }
             case COMPRESSED_TILEMAP -> {

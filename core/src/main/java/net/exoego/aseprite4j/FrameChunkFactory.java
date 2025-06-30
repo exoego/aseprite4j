@@ -6,9 +6,10 @@ class FrameChunkFactory {
     static FrameChunk read(InputStreamReader reader, ColorDepth colorDepth) throws IOException {
         var size = reader.DWORD();
         var type = reader.WORD();
-        int chunkSize = Math.toIntExact(size - 6); // size includes type and size itself
+        int chunkSize = Math.max(Math.toIntExact(size ), 0); // size includes type and size itself
 
-        System.out.println("exact chunk size: " + chunkSize);
+        System.out.println(
+                String.format("exact chunk size: %d for type 0x%04x", + chunkSize, type));
 
         try {
             return switch (type) {

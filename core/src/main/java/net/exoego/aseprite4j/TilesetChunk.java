@@ -26,9 +26,9 @@ public record TilesetChunk(long tilesetId, Set<TilesetFlag> tilesetFlagSet, long
 
         if (tilsetFlags.contains(TilesetFlag.INCLUDE_TILES_INSIDE_THIS_FILE)) {
             var dataLengthOfCompressedTilesetImage = reader.DWORD();
-            var deflater = reader.asDeflateZlib(Math.toIntExact(dataLengthOfCompressedTilesetImage));
             int size = Math.toIntExact(tileWidth * tileHeight * numberOfTiles);
-            var compressedTilesetImage = deflater.PIXELS(size, colorDepth);
+            var compressedTilesetImage = reader.deflatePixels(Math.toIntExact(dataLengthOfCompressedTilesetImage),
+                    size, colorDepth);
         }
 
         return new TilesetChunk(tilesetId, tilsetFlags, numberOfTiles,

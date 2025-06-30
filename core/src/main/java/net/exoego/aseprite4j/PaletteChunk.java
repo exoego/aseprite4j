@@ -29,6 +29,12 @@ public record PaletteChunk(List<Color.RGBA> palette) implements FrameChunk {
             palette[i] = color;
         }
 
-        return new PaletteChunk(List.of(palette));
+        var paletteChunk = new PaletteChunk(List.of(palette));
+        System.out.printf("palette chunk:\n  size: %s\n  from %s to %s\nentries: %s\n",
+                paletteSize,
+                from, to,
+                palette.length
+                );
+        return paletteChunk;
     }
 }

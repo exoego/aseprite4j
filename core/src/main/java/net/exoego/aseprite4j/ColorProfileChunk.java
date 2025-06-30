@@ -19,12 +19,20 @@ public record ColorProfileChunk(ColorProfile type, double gamma) implements Fram
         // reserved
         reader.skip(8);
 
-        if (type == ColorProfile.EmbeddedICC.value) {
-            var iccProfileLength = reader.DWORD();
-            // TODO: support icc profile?
-            reader.skip(iccProfileLength);
+        switch (iccType) {
+            case NoColorProfile -> {
+            }
+            case sRGB -> {
+            }
+            case EmbeddedICC -> {
+                var iccProfileLength = reader.DWORD();
+                // TODO: support icc profile?
+                reader.skip(iccProfileLength);
+            }
         }
 
-        return new ColorProfileChunk(iccType, gamma);
+        var colorProfileChunk = new ColorProfileChunk(iccType, gamma);
+        System.out.printf("colorProfileChunk %s\n", colorProfileChunk);
+        return colorProfileChunk;
     }
 }

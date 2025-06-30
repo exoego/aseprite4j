@@ -226,11 +226,13 @@ struct PaletteChunk {
 
   PaletteEntry entries[end - start + 1];
 };
-struct UserDataChunk {
+struct UserDataChunk<auto Size> {
+  u8 todo[Size];
+
 };
 struct SliceChunk {
 };
-struct TilesetChunk<T> {
+struct TilesetChunk<T, auto Size> {
    u32 tilesetId;
    u32 flags;
    /*
@@ -259,7 +261,8 @@ struct TilesetChunk<T> {
     }
     if (flags & 0x2) {
       u32 dataLengthOfCompressedTilesetImage;
-      PIXEL<T> compressedTilesetImage[tileWidth * tileHeight * numberOfTiles];
+      u8 ignore[dataLengthOfCompressedTilesetImage];
+//      PIXEL<T> compressedTilesetImage[tileWidth * tileHeight * numberOfTiles];
 //                  (Tile Width) x (Tile Height x Number of Tiles)
  }
 };
@@ -279,9 +282,9 @@ struct FrameChunk<T> {
     (0x2017): PathChunk pathChunk;
     (0x2018): TagsChunk tagsChunk;
     (0x2019): PaletteChunk paletteChunk;
-    (0x2020): UserDataChunk userDataChunk;
+    (0x2020): UserDataChunk<chunkSize - 6> userDataChunk;
     (0x2022): SliceChunk sliceChunk;
-    (0x2023): TilesetChunk<T> tilesetChunk;
+    (0x2023): TilesetChunk<T, chunkSize -6> tilesetChunk;
   }
 };
 

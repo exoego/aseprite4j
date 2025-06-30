@@ -98,7 +98,6 @@ public final class InputStreamReader {
         throw new UnsupportedOperationException("QWORD is not supported in this implementation");
     }
 
-
     /**
      * A 32-bit unsigned integer value
      */
@@ -176,7 +175,17 @@ public final class InputStreamReader {
         throw new UnsupportedOperationException("DOUBLE is not supported in this implementation");
     }
 
-    InputStreamReader asDeflateZlib(int chunkSize) throws IOException {
+    Pixel[] deflatePixels(int chunkSize, int pixelNums, ColorDepth depth) throws IOException {
+        try {
+            System.out.println("---> asDeflateZlib begin");
+            var isr = this.asDeflateZlib(chunkSize);
+            return isr.PIXELS(pixelNums, depth);
+        } finally {
+            System.out.println("<--- asDeflateZlib end");
+        }
+    }
+
+    private InputStreamReader asDeflateZlib(int chunkSize) throws IOException {
         // 2 extra bytes to ignore
         // 不要?
         //        this.skip(2);
@@ -188,7 +197,7 @@ public final class InputStreamReader {
         return new InputStreamReader(dis);
     }
 
-    Pixel[] PIXELS(int size, ColorDepth colorDepth) throws IOException {
+    private Pixel[] PIXELS(int size, ColorDepth colorDepth) throws IOException {
         var pixels = new Pixel[size];
         for (int i = 0; i < pixels.length; i++) {
             pixels[i] = this.PIXEL(colorDepth);
