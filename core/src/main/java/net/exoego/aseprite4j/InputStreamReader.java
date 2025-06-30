@@ -45,17 +45,21 @@ public final class InputStreamReader {
                 (bytes[0] & 0xFF);
     }
 
+    private int bytesRead = 0;
+
     byte[] readNBytes(int n) throws IOException {
         byte[] bytes = new byte[n];
-        in.read(bytes);
+        bytesRead += in.read(bytes);
         return bytes;
     }
 
     void skip(int n) throws IOException {
+        bytesRead += n;
         in.skipNBytes(n);
     }
 
     void skip(long n) throws IOException {
+        bytesRead += (int) n;
         in.skipNBytes(n);
     }
 
@@ -107,6 +111,9 @@ public final class InputStreamReader {
 
     String STRING() throws IOException {
         int len = WORD();
+        if (len == 0) {
+            return "";
+        }
         var buf = readNBytes(len);
         return new String(buf);
     }
@@ -203,5 +210,19 @@ public final class InputStreamReader {
             pixels[i] = this.PIXEL(colorDepth);
         }
         return pixels;
+    }
+
+    interface Block<R> {
+        R run() throws IOException;
+    }
+
+    <R> R checkSize(int expectedSize, Block<R> block) throws IOException {
+        bytesRead = 0;
+        var r = block.run();
+        if (bytesRead != expectedSize) {
+            throw new IOException("Expected size: " + expectedSize + ", but read: " + bytesRead + " bytes at " + currentAddress());
+        }
+        System.out.println("Successfully read " + bytesRead);
+        return r;
     }
 }

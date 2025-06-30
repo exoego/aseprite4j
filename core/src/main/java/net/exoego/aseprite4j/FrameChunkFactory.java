@@ -26,7 +26,7 @@ class FrameChunkFactory {
                 case 0x2019 -> PaletteChunk.build(reader);
                 case 0x2020 -> UserDataChunk.build(reader);
                 case 0x2022 -> SliceChunk.build(reader);
-                case 0x2023 -> TilesetChunk.build(reader, colorDepth);
+                case 0x2023 -> TilesetChunk.build(reader,chunkSize, colorDepth);
                 default ->
 //                    throw new IOException("Unknown chunk type: " + type);
                         UnknownChunk.build(reader, type, chunkSize);

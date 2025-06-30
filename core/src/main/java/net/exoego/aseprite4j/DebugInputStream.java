@@ -45,8 +45,8 @@ final class DebugInputStream extends InputStream {
         if (prevEndAddress == 0) {
             builder.append("initial read\n");
         } else {
-            builder.append(String.format("last read %08X - %08x (%8d)\n",
-                    prevBeginAddress, prevEndAddress,
+            builder.append(String.format("last read %08X - %08X (%d bytes)\n",
+                    prevBeginAddress, prevEndAddress - 1,
                     prevEndAddress - prevBeginAddress
             ));
         }
