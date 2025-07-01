@@ -37,10 +37,11 @@ public class FrameTest {
             "2f-index-3x3, 2",
             "1empty3, 3",
             "4f-index-4x4, 4",
-//            "file-tests-props, 6",
+            "file-tests-props, 6",
             "tags3x123reps, 9",
     })
     void getFrames(String filename, int expectedNumFrames) throws Exception {
+        System.out.println("!!!!!!!!! Testing " + filename + " with expected frames: " + expectedNumFrames);
         var path = Paths.get(FrameTest.class.getResource("/aseprite/sprites/" + filename + ".aseprite").toURI());
         var file = AsepriteFile.read(path);
         assertThat(file.header().numberOfFrames()).isEqualTo(expectedNumFrames);

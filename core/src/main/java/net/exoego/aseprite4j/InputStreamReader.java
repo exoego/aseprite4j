@@ -182,17 +182,7 @@ public final class InputStreamReader {
         throw new UnsupportedOperationException("DOUBLE is not supported in this implementation");
     }
 
-    Pixel[] deflatePixels(int chunkSize, int pixelNums, ColorDepth depth) throws IOException {
-        try {
-            System.out.println("---> asDeflateZlib begin");
-            var isr = this.asDeflateZlib(chunkSize);
-            return isr.PIXELS(pixelNums, depth);
-        } finally {
-            System.out.println("<--- asDeflateZlib end");
-        }
-    }
-
-    private InputStreamReader asDeflateZlib(int chunkSize) throws IOException {
+    InputStreamReader asDeflateZlib(int chunkSize) throws IOException {
         // 2 extra bytes to ignore
         this.skip(2);
 
@@ -202,12 +192,21 @@ public final class InputStreamReader {
         return new InputStreamReader(dis);
     }
 
-    private Pixel[] PIXELS(int size, ColorDepth colorDepth) throws IOException {
+    Pixel[] PIXELS(int size, ColorDepth colorDepth) throws IOException {
         var pixels = new Pixel[size];
         for (int i = 0; i < pixels.length; i++) {
             pixels[i] = this.PIXEL(colorDepth);
         }
         return pixels;
+    }
+
+
+    Tile[] TILES(int size, int bitsPerTile) throws IOException {
+        var tiles = new Tile[size];
+        for (int i = 0; i < tiles.length; i++) {
+            tiles[i] = this.TILE(bitsPerTile);
+        }
+        return tiles;
     }
 
     interface Block<R> {

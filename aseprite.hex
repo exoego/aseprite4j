@@ -200,12 +200,29 @@ struct CelChunk<T, auto Size> {
 
 struct CelExtraChunk {
 };
-struct ExternalFileChunk {
+
+struct ExternalFileChunkEntry {
+  u32 entryId;
+  u8 type;
+  u8 reserved[7];
+  STRING externalFileNameOrExtensionId;
 };
+
+struct ExternalFileChunk {
+  u32 numberOfEntries;
+  u8 reserved[8];
+  ExternalFileChunkEntry entries[numberOfEntries];
+};
+
+
 struct MaskChunk {
 };
+
+
 struct PathChunk {
 };
+
+
 struct TagsChunk {
 };
 

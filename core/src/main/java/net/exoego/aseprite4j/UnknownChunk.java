@@ -14,6 +14,5 @@ final class UnknownChunk implements FrameChunk {
             System.err.println("Failed to read unknown chunk type: " + type + ", size: " + chunkSize);
             throw e;
         }
-//        throw new IOException("Failed to read unknown chunk type: " + type + ", size: " + chunkSize + "\n at " + reader.currentAddress());
     }
 }
