@@ -194,11 +194,9 @@ public final class InputStreamReader {
 
     private InputStreamReader asDeflateZlib(int chunkSize) throws IOException {
         // 2 extra bytes to ignore
-        // 不要?
-        //        this.skip(2);
+        this.skip(2);
 
-        var bytes = this.readNBytes(chunkSize);
-//        var bytes = in.readNBytes(chunkSize);
+        var bytes = this.readNBytes(chunkSize - 2);
         var bais = new ByteArrayInputStream(bytes);
         var dis = new DeflaterInputStream(bais);
         return new InputStreamReader(dis);

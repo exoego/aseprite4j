@@ -37,7 +37,7 @@ public record LayerChunk(
             var layerUuid = reader.UUID();
         }
 
-        return new LayerChunk(
+        var layerChunk = new LayerChunk(
                 flagsRaw,
                 layerType,
                 childLevel,
@@ -45,6 +45,8 @@ public record LayerChunk(
                 opacity,
                 layerName
         );
+        System.out.println("LayerChunk: " + layerChunk);
+        return layerChunk;
     }
 
     public Set<LayerFlag> flagsSet() {

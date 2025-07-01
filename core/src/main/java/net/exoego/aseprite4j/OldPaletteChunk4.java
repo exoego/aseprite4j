@@ -17,6 +17,7 @@ public record OldPaletteChunk4(List<Color.RGB> palette) implements FrameChunk {
             }
             reader.skip(numberOfPaletteEntriesToSkipFromLastPacket);
         }
+        System.out.println("OldPaletteChunk4: " + palette.size() + " colors read");
         return new OldPaletteChunk4(palette);
     }
 }
