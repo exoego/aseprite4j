@@ -244,9 +244,29 @@ struct PaletteChunk {
   PaletteEntry entries[end - start + 1];
 };
 struct UserDataChunk<auto Size> {
-  u8 todo[Size];
+  u32 flag;
 
+
+  if (flag & 0x1 != 0) {
+    STRING text;
+//    Size -= text.length;
+  }
+  if (flag & 0x2 != 0) {
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
+//    Size -= 4;
+  }
+  if (flag & 0x4 != 0) {
+     u32 sizeInBytesOfAllProps;
+     u32 numberOfProps;
+
+     u8 todo[sizeInBytesOfAllProps - 8];
+  }
 };
+
+
 struct SliceChunk {
 };
 struct TilesetChunk<T, auto Size> {
