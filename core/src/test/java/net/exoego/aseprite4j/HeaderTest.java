@@ -1,14 +1,26 @@
 package net.exoego.aseprite4j;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.io.ByteArrayInputStream;
 import java.nio.file.Paths;
 
 public class HeaderTest {
+    @Test
+    public void throwsInvalidMagicNumber() {
+        var bios = new ByteArrayInputStream(new byte[]{
+                0x12, 0x00, 0x00, 0x00, // bytes in this frame
+                (byte) 0, (byte) 0, // magic number
+        });
+        assertThrows(IllegalArgumentException.class, () -> Header.read(new InputStreamReader(bios)));
+    }
+
     @ParameterizedTest
     @CsvSource({
             "cut_paste, 348",
@@ -16,10 +28,10 @@ public class HeaderTest {
             "tags3x123reps, 1282",
             "file-tests-props, 2300",
     })
-    void getFileSizeInBytes(String filename, int expected) throws Exception {
+    void fileSizeInBytes(String filename, int expected) throws Exception {
         var path = Paths.get(HeaderTest.class.getResource("/aseprite/sprites/" + filename + ".aseprite").toURI());
         var header = Header.read(path);
-        assertThat(header.getFileSizeInBytes()).isEqualTo(expected);
+        assertThat(header.fileSizeInBytes()).isEqualTo(expected);
     }
 
     @ParameterizedTest
@@ -37,7 +49,7 @@ public class HeaderTest {
     void getNumberOfFrames(String filename, int expected) throws Exception {
         var path = Paths.get(HeaderTest.class.getResource("/aseprite/sprites/" + filename + ".aseprite").toURI());
         var header = Header.read(path);
-        assertThat(header.getNumberOfFrames()).isEqualTo(expected);
+        assertThat(header.numberOfFrames()).isEqualTo(expected);
     }
 
     @ParameterizedTest
@@ -49,7 +61,7 @@ public class HeaderTest {
     void getImageWidth(String filename, int expected) throws Exception {
         var path = Paths.get(HeaderTest.class.getResource("/aseprite/sprites/" + filename + ".aseprite").toURI());
         var header = Header.read(path);
-        assertThat(header.getImageWidth()).isEqualTo(expected);
+        assertThat(header.imageWidth()).isEqualTo(expected);
     }
 
     @ParameterizedTest
@@ -61,7 +73,7 @@ public class HeaderTest {
     void getImageHeight(String filename, int expected) throws Exception {
         var path = Paths.get(HeaderTest.class.getResource("/aseprite/sprites/" + filename + ".aseprite").toURI());
         var header = Header.read(path);
-        assertThat(header.getImageHeight()).isEqualTo(expected);
+        assertThat(header.imageHeight()).isEqualTo(expected);
     }
 
     @ParameterizedTest
@@ -73,8 +85,8 @@ public class HeaderTest {
     void getColorDepth(String filename, ColorDepth expected, int expectedRawValue) throws Exception {
         var path = Paths.get(HeaderTest.class.getResource("/aseprite/sprites/" + filename + ".aseprite").toURI());
         var header = Header.read(path);
-        assertThat(header.getColorDepth()).isEqualTo(expected);
-        assertThat(header.getColorDepth().getBitsPerPixel()).isEqualTo(expectedRawValue);
+        assertThat(header.colorDepth()).isEqualTo(expected);
+        assertThat(header.colorDepth().getBitsPerPixel()).isEqualTo(expectedRawValue);
     }
 
     @ParameterizedTest
@@ -85,10 +97,10 @@ public class HeaderTest {
     void getRawFlags(String filename, int expected) throws Exception {
         var path = Paths.get(HeaderTest.class.getResource("/aseprite/sprites/" + filename + ".aseprite").toURI());
         var header = Header.read(path);
-        assertThat(header.getRawFlags()).isEqualTo(expected);
+        assertThat(header.flagsRaw()).isEqualTo(expected);
 
-        if ((int) header.getRawFlags() == 1) {
-            assertThat(header.getFlagSet()).containsExactly(HeaderFlag.LayerOpacityValid);
+        if ((int) header.flagsRaw() == 1) {
+            assertThat(header.flagsSet()).containsExactly(HeaderFlag.LayerOpacityValid);
         } else {
             // TODO: Add more tests for other flags
             fail("Please update this test to assert other flags");
@@ -104,7 +116,7 @@ public class HeaderTest {
     void getTransparentColorIndex(String filename, int expected) throws Exception {
         var path = Paths.get(HeaderTest.class.getResource("/aseprite/sprites/" + filename + ".aseprite").toURI());
         var header = Header.read(path);
-        assertThat(header.getTransparentColorIndex()).isEqualTo(expected);
+        assertThat(header.transparentColorIndex()).isEqualTo(expected);
     }
 
     @ParameterizedTest
@@ -117,7 +129,7 @@ public class HeaderTest {
     void getNumberOfColors(String filename, int expected) throws Exception {
         var path = Paths.get(HeaderTest.class.getResource("/aseprite/sprites/" + filename + ".aseprite").toURI());
         var header = Header.read(path);
-        assertThat(header.getNumberOfColors()).isEqualTo(expected);
+        assertThat(header.numberOfColors()).isEqualTo(expected);
     }
 
     @ParameterizedTest
@@ -131,9 +143,8 @@ public class HeaderTest {
     void getPixelWidthAndHeight(String filename, int expectedWidth, int expectedHeight, double expectedAspectRatio) throws Exception {
         var path = Paths.get(HeaderTest.class.getResource("/aseprite/sprites/" + filename + ".aseprite").toURI());
         var header = Header.read(path);
-        assertThat(header.getPixelWidth()).isEqualTo(expectedWidth);
-        assertThat(header.getPixelHeight()).isEqualTo(expectedHeight);
-        assertThat(header.getPixelHeight()).isEqualTo(expectedHeight);
+        assertThat(header.pixelWidth()).isEqualTo(expectedWidth);
+        assertThat(header.pixelHeight()).isEqualTo(expectedHeight);
         assertThat(header.getPixelAspectRatio()).isEqualTo(expectedAspectRatio);
     }
 
@@ -145,9 +156,9 @@ public class HeaderTest {
     void getGridXandY(String filename, int expectedX, int expectedY, int expectedWidth, int expectedHeight) throws Exception {
         var path = Paths.get(HeaderTest.class.getResource("/aseprite/sprites/" + filename + ".aseprite").toURI());
         var header = Header.read(path);
-        assertThat(header.getGridX()).isEqualTo(expectedX);
-        assertThat(header.getGridY()).isEqualTo(expectedY);
-        assertThat(header.getGridWidth()).isEqualTo(expectedWidth);
-        assertThat(header.getGridHeight()).isEqualTo(expectedHeight);
+        assertThat(header.gridX()).isEqualTo(expectedX);
+        assertThat(header.gridY()).isEqualTo(expectedY);
+        assertThat(header.gridWidth()).isEqualTo(expectedWidth);
+        assertThat(header.gridHeight()).isEqualTo(expectedHeight);
     }
 }

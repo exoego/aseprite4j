@@ -1,5 +1,6 @@
 package net.exoego.aseprite4j;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -16,110 +17,111 @@ public interface Header {
     /**
      * @return Size of the file in bytes.
      */
-    long getFileSizeInBytes();
+    long fileSizeInBytes();
 
     /**
      * @return Number of frames of the image.
      */
-    int getNumberOfFrames();
+    int numberOfFrames();
 
     /**
      * @return Width in pixels of the image.
      */
-    int getImageWidth();
+    int imageWidth();
 
     /**
      * @return Width in pixels of the image.
      */
-    int getImageHeight();
+    int imageHeight();
 
     /**
      * @return Color depth (bits per pixel) of the image.
      */
-    ColorDepth getColorDepth();
+    ColorDepth colorDepth();
 
     /**
      * @return EnumSet of flags
      */
-    EnumSet<HeaderFlag> getFlagSet();
+    EnumSet<HeaderFlag> flagsSet();
 
     /**
      * @return Raw value of flags
      */
-    long getRawFlags();
+    long flagsRaw();
 
-    int getTransparentColorIndex();
+    int transparentColorIndex();
 
     /**
      * @return Number of colors (0 means 256 for old sprites)
      */
-    int getNumberOfColors();
+    int numberOfColors();
 
     /**
      * @return the pixel width of the image.
      */
-    short getPixelWidth();
+    short pixelWidth();
 
     /**
      * @return the pixel height of the image.
      */
-    short getPixelHeight();
+    short pixelHeight();
 
     /**
      * @return pixel width/pixel height
      */
     default double getPixelAspectRatio() {
-        if (getPixelHeight() == 0) {
+        if (pixelHeight() == 0) {
             return 1;
         }
-        return (double) getPixelWidth() / getPixelHeight();
+        return (double) pixelWidth() / pixelHeight();
     }
 
     /**
      * @return the X position of the grid start
      */
-    int getGridX();
+    int gridX();
 
     /**
      * @return the Y position of the grid start
      */
-    int getGridY();
+    int gridY();
 
     /**
      * Grid width is 16px on Aseprite by default.
      *
      * @return Grid width (zero if there is no grid)
      */
-    int getGridWidth();
+    int gridWidth();
 
     /**
      * Grid height is 16px on Aseprite by default.
      *
      * @return Grid width (zero if there is no grid)
      */
-    int getGridHeight();
+    int gridHeight();
 
-    static Header read(Path path) {
+    static Header read(Path path) throws IOException {
         try (var in = java.nio.file.Files.newInputStream(path)) {
             return read(in);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
-    static Header read(InputStream in) {
-        var header = new HeaderImpl();
+    static Header read(InputStream in) throws IOException {
         var reader = new InputStreamReader(in);
-        header.fileSize = reader.DWORD();
+        return read(reader);
+    }
+
+    static Header read(InputStreamReader reader) throws IOException {
+        var fileSize = reader.DWORD();
         var magicNumber = reader.WORD();
         if (magicNumber != MAGIC_NUMBER) {
-            throw new IllegalArgumentException("Invalid magic number: " + Integer.toHexString(magicNumber));
+            throw new IllegalArgumentException("Invalid file header magic number: " + Integer.toHexString(magicNumber));
         }
-        header.numFrames = reader.WORD();
-        header.imageWidth = reader.WORD();
-        header.imageHeight = reader.WORD();
-        header.colorDepth = ColorDepth.from(reader.WORD());
-        header.flags = reader.DWORD();
+        var numFrames = reader.WORD();
+        var imageWidth = reader.WORD();
+        var imageHeight = reader.WORD();
+        var colorDepth = ColorDepth.from(reader.WORD());
+        var rawFlags = reader.DWORD();
 
         // speed is DEPRECATED: You should use the frame duration field from each frame header
         reader.WORD();
@@ -134,22 +136,37 @@ public interface Header {
             throw new IllegalArgumentException("Invalid reserved field");
         }
 
-        header.transparentColorIndex = reader.BYTE();
+        var transparentColorIndex = reader.BYTE();
 
         // Ignore these bytes
         reader.skip(3);
 
-        header.numberOfColors = reader.WORD();
-        header.pixelWidth = reader.BYTE();
-        header.pixelHeight = reader.BYTE();
-        header.gridX = reader.SHORT();
-        header.gridY = reader.SHORT();
-        header.gridWidth = reader.WORD();
-        header.gridHeight = reader.WORD();
+        var numberOfColors = reader.WORD();
+        var pixelWidth = reader.BYTE();
+        var pixelHeight = reader.BYTE();
+        var gridX = reader.SHORT();
+        var gridY = reader.SHORT();
+        var gridWidth = reader.WORD();
+        var gridHeight = reader.WORD();
 
         // For future (set to zero)
         reader.skip(84);
 
-        return header;
+        return new HeaderImpl(
+                fileSize,
+                numFrames,
+                imageWidth,
+                imageHeight,
+                rawFlags,
+                transparentColorIndex,
+                colorDepth,
+                numberOfColors,
+                pixelWidth,
+                pixelHeight,
+                gridX,
+                gridY,
+                gridWidth,
+                gridHeight
+        );
     }
 }
