@@ -28,7 +28,7 @@ subprojects {
         testImplementation("org.junit.jupiter:junit-jupiter")
         testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-        testImplementation("com.google.truth:truth:1.4.4")
+        testImplementation("com.google.truth:truth:1.4.5")
     }
 }
 
