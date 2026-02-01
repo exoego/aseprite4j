@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.UUID;
-import java.util.zip.DeflaterInputStream;
+import java.util.zip.InflaterInputStream;
 
 public final class InputStreamReader {
     private final DebugInputStream in;
@@ -273,14 +273,11 @@ public final class InputStreamReader {
         return new Rect(origin, size);
     }
 
-    InputStreamReader asDeflateZlib(int chunkSize) throws IOException {
-        // 2 extra bytes to ignore
-        this.skip(2);
-
-        var bytes = this.readNBytes(chunkSize - 2);
+    InputStreamReader decompressZlib(int chunkSize) throws IOException {
+        var bytes = this.readNBytes(chunkSize);
         var bais = new ByteArrayInputStream(bytes);
-        var dis = new DeflaterInputStream(bais);
-        return new InputStreamReader(dis);
+        var iis = new InflaterInputStream(bais);
+        return new InputStreamReader(iis);
     }
 
     Pixel[] PIXELS(int size, ColorDepth colorDepth) throws IOException {

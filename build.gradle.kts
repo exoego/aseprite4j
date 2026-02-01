@@ -1,17 +1,19 @@
-import org.gradle.internal.impldep.org.jsoup.nodes.Document
-import org.gradle.kotlin.dsl.testRuntimeOnly
-
 plugins {
     java
     jacoco
+    `maven-publish`
 }
 
-group = "net.exoego"
+group = "net.exoego.aseprite4j"
 version = "1.0-SNAPSHOT"
 
 subprojects {
     apply(plugin = "java")
     apply(plugin = "jacoco")
+    apply(plugin = "maven-publish")
+
+    group = "net.exoego.aseprite4j"
+    version = "1.0-SNAPSHOT"
 
     java {
         toolchain {
@@ -29,6 +31,14 @@ subprojects {
         testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
         testImplementation("com.google.truth:truth:1.4.5")
+    }
+
+    configure<PublishingExtension> {
+        publications {
+            create<MavenPublication>("maven") {
+                from(components["java"])
+            }
+        }
     }
 }
 

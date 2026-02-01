@@ -43,7 +43,7 @@ public record TilesetChunk(
         if (tilesetFlags.contains(TilesetFlag.INCLUDE_TILES_INSIDE_THIS_FILE)) {
             var dataLengthOfCompressedTilesetImage = reader.DWORD();
             int size = Math.toIntExact(tileWidth * tileHeight * numberOfTiles);
-            var compressedTilesetImageReader = reader.asDeflateZlib(Math.toIntExact(dataLengthOfCompressedTilesetImage));
+            var compressedTilesetImageReader = reader.decompressZlib(Math.toIntExact(dataLengthOfCompressedTilesetImage));
             var pixels = compressedTilesetImageReader.PIXELS(size, colorDepth);
             tilesetImage = Optional.of(pixels);
         }
