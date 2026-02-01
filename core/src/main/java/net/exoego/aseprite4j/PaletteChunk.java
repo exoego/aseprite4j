@@ -1,9 +1,15 @@
 package net.exoego.aseprite4j;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-public record PaletteChunk(List<Color.RGBA> palette) implements FrameChunk {
+public record PaletteChunk(int paletteSize, List<PaletteEntry> entries) implements FrameChunk {
+
+    public record PaletteEntry(Color.RGBA color, Optional<String> name) {
+    }
+
     static PaletteChunk build(InputStreamReader reader) throws IOException {
         var paletteSize = (int) reader.DWORD();
         var firstColorIndex = (int) reader.DWORD();
@@ -11,30 +17,22 @@ public record PaletteChunk(List<Color.RGBA> palette) implements FrameChunk {
         // reserved
         reader.skip(8);
 
-        var palette = new Color.RGBA[paletteSize];
+        var entries = new ArrayList<PaletteEntry>(lastColorIndex - firstColorIndex + 1);
 
-        var from = firstColorIndex;
-        var to = lastColorIndex;
-        var range = to - from + 1;
-
-        for (int i = from; i < range; i++) {
+        for (int i = firstColorIndex; i <= lastColorIndex; i++) {
             var flag = reader.WORD();
             boolean hasName = (flag & 0x1) > 0;
 
             var color = new Color.RGBA(reader.BYTE(), reader.BYTE(), reader.BYTE(), reader.BYTE());
+
+            Optional<String> name = Optional.empty();
             if (hasName) {
-                // TODO: name is not used
-                reader.STRING();
+                name = Optional.of(reader.STRING());
             }
-            palette[i] = color;
+
+            entries.add(new PaletteEntry(color, name));
         }
 
-        var paletteChunk = new PaletteChunk(List.of(palette));
-        System.out.printf("palette chunk:\n  size: %s\n  from %s to %s\nentries: %s\n",
-                paletteSize,
-                from, to,
-                palette.length
-                );
-        return paletteChunk;
+        return new PaletteChunk(paletteSize, entries);
     }
 }
