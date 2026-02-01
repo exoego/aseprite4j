@@ -1,0 +1,356 @@
+struct FileHeader {
+  u32 fileSize;
+  u16 magicNumber;
+  if (magicNumber != 0xA5E0)
+    continue;
+  u16 frames;
+  u16 widthInPixels;
+  u16 heightInPixels;
+  u16 colorDepth;
+  u32 flags;
+  u16 speed;
+  u32 obsolete1;
+  u32 obsolete2;
+  u8 paletteEntryIndex;
+  u8 ignore[3];
+  u16 numberOfColors;
+  u8 pixelWidth;
+  u8 pixelHeight;
+  s16 gridX;
+  s16 gridY;
+  u16 gridWidth;
+  u16 gridHeight;
+  u8 future[84];
+};
+
+struct ColorProfileChunk { //0x2007
+  u16 type;
+  u16 flags;
+  float fixedGamma;
+  u8 reserved[8];
+
+  if (type == 0x2) {
+    u32 iccProfileDataLength;
+    u8  iccProfileData[iccProfileDataLength];
+  }
+};
+
+struct FrameHeader {
+  u32 bytesInFrame;
+  u16 magicNumber;
+  if (magicNumber != 0xF1FA)
+    continue;
+  u16 oldNumChunks;
+  u16 frameDurationInMsec;
+  u8 future[2];
+  u32 newNumChunks;
+};
+
+struct OldColor {
+  u8 red;
+  u8 green;
+  u8 blue;
+};
+
+struct OldPacket {
+  u8 numberOfPalletEntriesToSkipFromLastPackage;
+  u8 numberOfColors;
+  OldColor colors[numberOfColors];
+};
+
+struct OldPalletteChunk {
+  u16 numberOfPackets;
+  OldPacket packets[numberOfPackets];
+};
+
+struct STRING {
+  u16 length;
+  u8 characters[length];
+};
+struct UUID {
+  u8 characters[16];
+};
+struct TILE {
+//* `TILE`: **Tilemaps**: Each tile can be a 8-bit (`BYTE`), 16-bit
+//  (`WORD`), or 32-bit (`DWORD`) value and there are masks related to
+//  the meaning of each bit.
+
+};
+
+struct LayerChunk {
+/*
+    WORD        Flags:
+                  1 = Visible
+                  2 = Editable
+                  4 = Lock movement
+                  8 = Background
+                  16 = Prefer linked cels
+                  32 = The layer group should be displayed collapsed
+                  64 = The layer is a reference layer
+*/
+  u16 flags;
+/*
+    WORD        Layer type
+                  0 = Normal (image) layer
+                  1 = Group
+                  2 = Tilemap
+*/
+  u16 layerType;
+  u16 layerChildLevel;
+  u16 defaultLayerWidth;
+  u16 defaultLayerHeight;
+  /*
+    WORD        Blend mode (see NOTE.6)
+                  Normal         = 0
+                  Multiply       = 1
+                  Screen         = 2
+                  Overlay        = 3
+                  Darken         = 4
+                  Lighten        = 5
+                  Color Dodge    = 6
+                  Color Burn     = 7
+                  Hard Light     = 8
+                  Soft Light     = 9
+                  Difference     = 10
+                  Exclusion      = 11
+                  Hue            = 12
+                  Saturation     = 13
+                  Color          = 14
+                  Luminosity     = 15
+                  Addition       = 16
+                  Subtract       = 17
+                  Divide         = 18*/
+  u16 blendMode;
+
+  u8 opacity;
+  u8 future[3];
+
+  STRING layerName;
+
+  match(layerType) {
+    (0x2): u16 tilesetIndex;
+  }
+
+  if (layerType & 0x4 != 0) {
+     UUID layerUUID;
+  }
+};
+
+struct PIXEL<T> {
+/*
+   - **RGBA**: `BYTE[4]`, each pixel have 4 bytes in this order Red, Green, Blue, Alpha.
+    - **Grayscale**: `BYTE[2]`, each pixel have 2 bytes in the order Value, Alpha.
+    - **Indexed**: `BYTE`, each pixel uses 1 byte (the index).
+*/
+   T colorIndex;
+};
+
+struct CelChunk<T, auto Size> {
+  u16 layerIndex;
+  s16 xPos;
+  s16 yPos;
+  u8 opacityLevel;
+/*    WORD        Cel Type
+                0 - Raw Image Data (unused, compressed image is preferred)
+                1 - Linked Cel
+                2 - Compressed Image
+                3 - Compressed Tilemap */
+  u16 celType;
+
+/*
+    SHORT       Z-Index (see NOTE.5)
+                0 = default layer ordering
+                +N = show this cel N layers later
+                -N = show this cel N layers back
+*/
+  s16 zIndex;
+
+  u8 future[5];
+
+  match(celType) {
+    (0x0):  { // raw pixel cel
+       u16 widthInPixels;
+       u16 heightInPixels;
+       PIXEL<T> rawPixelData[];
+     }
+     (0x1): { // linked cel
+        u16 framePosition;
+     }
+     (0x2): { // compressed image
+       u16 widthInPixels;
+       u16 heightInPixels;
+       u8 ignore[2];
+       u8 rawPixelData[Size - 16 - 6];
+       // = builtin::hex::dec::zlib_decompress(PIXEL, Size - 16);
+//       PIXEL rawPixelData[widthInPixels*heightInPixels];
+     }
+     (0x3): { // compressed tilemap
+       u16 widthNumberTiles;
+       u16 heightNumberTiles;
+       u16 bitsPerTile;
+       u32 bitmaskTileId;
+       u32 bitmaskXFlip;
+       u32 bitmaskYFlip;
+       u32 bitmaskDiagonalFlip;
+       u8 reserved[8];
+       TILE rowByRow[];
+     }
+  }
+};
+
+struct CelExtraChunk {
+};
+
+struct ExternalFileChunkEntry {
+  u32 entryId;
+  u8 type;
+  u8 reserved[7];
+  STRING externalFileNameOrExtensionId;
+};
+
+struct ExternalFileChunk {
+  u32 numberOfEntries;
+  u8 reserved[8];
+  ExternalFileChunkEntry entries[numberOfEntries];
+};
+
+
+struct MaskChunk {
+};
+
+
+struct PathChunk {
+};
+
+
+struct TagsChunk {
+};
+
+struct PaletteEntry {
+  u16 hasName;
+  u8 r;
+  u8 g;
+  u8 b;
+  u8 a;
+  if (hasName & 0x1 != 0)
+    STRING name;
+};
+struct PaletteChunk {
+  u32 numberOfEntries;
+  u32 start; // firstColorIndexToChange
+  u32 end; // lastColorIndexToChange
+  u8 reserved[8];
+
+  PaletteEntry entries[end - start + 1];
+};
+struct UserDataChunk<auto Size> {
+  u32 flag;
+
+
+  if (flag & 0x1 != 0) {
+    STRING text;
+//    Size -= text.length;
+  }
+  if (flag & 0x2 != 0) {
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
+//    Size -= 4;
+  }
+  if (flag & 0x4 != 0) {
+     u32 sizeInBytesOfAllProps;
+     u32 numberOfProps;
+
+     u8 todo[sizeInBytesOfAllProps - 8];
+  }
+};
+
+
+struct SliceChunk {
+};
+struct TilesetChunk<T, auto Size> {
+   u32 tilesetId;
+   u32 flags;
+   /*
+    DWORD       Tileset flags
+                  1 - Include link to external file
+                  2 - Include tiles inside this file
+                  4 - Tilemaps using this tileset use tile ID=0 as empty tile
+                      (this is the new format). In rare cases this bit is off,
+                      and the empty tile will be equal to 0xffffffff (used in
+                      internal versions of Aseprite)
+                  8 - Aseprite will try to match modified tiles with their X
+                      flipped version automatically in Auto mode when using
+                      this tileset.
+                  16 - Same for Y flips
+                  32 - Same for D(iagonal) flips*/
+    u32 numberOfTiles;
+    u16 tileWidth;
+    u16 tileHeight;
+    s16 baseIndex;
+    u8 reserved[14];
+    STRING name;
+
+    if (flags & 0x1) {
+      u32 externalFileId;
+      u32 tilesetIdInExternalFile;
+    }
+    if (flags & 0x2) {
+      u32 dataLengthOfCompressedTilesetImage;
+      u8 ignore[dataLengthOfCompressedTilesetImage];
+//      PIXEL<T> compressedTilesetImage[tileWidth * tileHeight * numberOfTiles];
+//                  (Tile Width) x (Tile Height x Number of Tiles)
+ }
+};
+
+struct FrameChunk<T> {
+  u32 chunkSize;
+  u16 chunkType;
+
+  match (chunkType) {
+    (0x0004): OldPalletteChunk oldPalleteChunk;
+    (0x2004): LayerChunk layerChunk;
+    (0x2005): CelChunk<T, chunkSize - 6> celChunk;
+    (0x2006): CelExtraChunk celExtraChunk;
+    (0x2007): ColorProfileChunk colorProfileChunk;
+    (0x2008): ExternalFileChunk externalFileChunk;
+    (0x2016): MaskChunk maskChunk;
+    (0x2017): PathChunk pathChunk;
+    (0x2018): TagsChunk tagsChunk;
+    (0x2019): PaletteChunk paletteChunk;
+    (0x2020): UserDataChunk<chunkSize - 6> userDataChunk;
+    (0x2022): SliceChunk sliceChunk;
+    (0x2023): TilesetChunk<T, chunkSize -6> tilesetChunk;
+  }
+};
+
+
+
+u32 colorDepth @ 0x0000000C;
+
+struct Frame {
+  FrameHeader header;
+
+  if (colorDepth & 0x20) {
+    FrameChunk<u32> chunk[header.newNumChunks];
+  } else if (colorDepth & 0x10) {
+    FrameChunk<u16> chunk[header.newNumChunks];
+  } else {
+    FrameChunk<u8> chunk[header.newNumChunks];
+  }
+};
+
+struct Aseprite {
+  FileHeader header;
+  Frame frames[header.frames];
+};
+
+
+Aseprite Aseprite_at_0x00 @ 0x00;
+
+//FileHeader fileheader_at_0x00 @ 0x00;
+//FrameHeader frameheader_at_0x80 @ 0x80;
+//FrameChunk framechunk_at_0x90 @ 0x90;
+//FrameHeader frameheader_at_0x152 @ 0x152;
+//FrameChunk framechunk_at_0x162 @ 0x162;
