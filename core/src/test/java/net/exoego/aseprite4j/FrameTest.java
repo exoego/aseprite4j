@@ -54,6 +54,8 @@ public class FrameTest {
             "2f-index-3x3",
             "2x2-index-2frame",
             "2x2tilemap2x2tile",
+            "2x3tilemap-indexed",
+            "3x2tilemap-grayscale",
             "4f-index-4x4",
             "abcd",
             "bg-index-3",
