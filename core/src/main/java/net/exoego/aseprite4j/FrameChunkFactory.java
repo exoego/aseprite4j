@@ -16,7 +16,7 @@ class FrameChunkFactory {
             case 0x2006 -> CelExtraChunk.build(reader);
             case 0x2007 -> ColorProfileChunk.build(reader);
             case 0x2008 -> ExternalFilesChunk.build(reader);
-            case 0x2016 -> MaskChunk.build(reader, chunkSize);
+            case 0x2016 -> MaskChunk.build(reader);
             case 0x2017 -> PathChunk.build(reader);
             case 0x2018 -> TagsChunk.build(reader);
             case 0x2019 -> PaletteChunk.build(reader);
