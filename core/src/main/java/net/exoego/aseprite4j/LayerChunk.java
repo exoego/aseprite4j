@@ -33,11 +33,7 @@ public record LayerChunk(
             var tilesetIndex = reader.DWORD();
         }
 
-        if ((flagsRaw & 0x4) != 0) {
-            var layerUuid = reader.UUID();
-        }
-
-        var layerChunk = new LayerChunk(
+        return new LayerChunk(
                 flagsRaw,
                 layerType,
                 childLevel,
@@ -45,8 +41,6 @@ public record LayerChunk(
                 opacity,
                 layerName
         );
-        System.out.println("LayerChunk: " + layerChunk);
-        return layerChunk;
     }
 
     public Set<LayerFlag> flagsSet() {
