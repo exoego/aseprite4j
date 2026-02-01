@@ -23,9 +23,6 @@ record FrameHeaderImpl(long bytesInThisFrame, int frameDuration, long numberOfCh
         } else {
             reader.skip(4);
         }
-        System.out.println("FrameHeader read: bytesInThisFrame=" + bytesInThisFrame
-                + ", numberOfChunks=" + numberOfChunks
-                + " at " + reader.currentAddress());
         return new FrameHeaderImpl(bytesInThisFrame, frameDuration, numberOfChunks);
     }
 }
