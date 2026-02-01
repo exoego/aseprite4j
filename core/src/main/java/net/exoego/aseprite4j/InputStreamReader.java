@@ -10,14 +10,23 @@ import java.util.UUID;
 import java.util.zip.InflaterInputStream;
 
 public final class InputStreamReader {
-    private final DebugInputStream in;
+    private final InputStream in;
+    private final boolean debugEnabled;
 
     InputStreamReader(InputStream in) {
-        this.in = new DebugInputStream(in);
+        this(in, false);
+    }
+
+    InputStreamReader(InputStream in, boolean debugEnabled) {
+        this.debugEnabled = debugEnabled;
+        this.in = debugEnabled ? new DebugInputStream(in) : in;
     }
 
     public String currentAddress() {
-        return this.in.currentAddress();
+        if (debugEnabled && in instanceof DebugInputStream debugIn) {
+            return debugIn.currentAddress();
+        }
+        return "debug mode disabled";
     }
 
     static short toUnsignedByte(byte[] bytes) {
@@ -66,8 +75,8 @@ public final class InputStreamReader {
     private int bytesRead = 0;
 
     byte[] readNBytes(int n) throws IOException {
-        byte[] bytes = new byte[n];
-        bytesRead += in.read(bytes);
+        var bytes = in.readNBytes(n);
+        bytesRead += bytes.length;
         return bytes;
     }
 
@@ -190,23 +199,18 @@ public final class InputStreamReader {
     }
 
     Pixel PIXEL(ColorDepth depth) throws IOException {
+        var bytesPerPixel = depth.getBitsPerPixel() / 8;
+        var buffer = readNBytes(bytesPerPixel);
         return switch (depth) {
-            case RGBA -> {
-                short r = BYTE();
-                short g = BYTE();
-                short b = BYTE();
-                short a = BYTE();
-                yield new Pixel.RGBA(r, g, b, a);
-            }
-            case Grayscale -> {
-                short value = BYTE();
-                short alpha = BYTE();
-                yield new Pixel.Grayscale(value, alpha);
-            }
-            case Indexed -> {
-                short index = BYTE();
-                yield new Pixel.Index(index);
-            }
+            case RGBA -> new Pixel.RGBA(
+                    (short) (buffer[0] & 0xFF),
+                    (short) (buffer[1] & 0xFF),
+                    (short) (buffer[2] & 0xFF),
+                    (short) (buffer[3] & 0xFF));
+            case Grayscale -> new Pixel.Grayscale(
+                    (short) (buffer[0] & 0xFF),
+                    (short) (buffer[1] & 0xFF));
+            case Indexed -> new Pixel.Index((short) (buffer[0] & 0xFF));
         };
     }
 
@@ -280,14 +284,37 @@ public final class InputStreamReader {
         return new InputStreamReader(iis);
     }
 
-    Pixel[] PIXELS(int size, ColorDepth colorDepth) throws IOException {
-        var pixels = new Pixel[size];
-        for (int i = 0; i < pixels.length; i++) {
-            pixels[i] = this.PIXEL(colorDepth);
+    Pixel[] PIXELS(int count, ColorDepth colorDepth) throws IOException {
+        int bytesPerPixel = colorDepth.getBitsPerPixel() / 8;
+        var buffer = readNBytes(count * bytesPerPixel);
+        var pixels = new Pixel[count];
+
+        int offset = 0;
+        switch (colorDepth) {
+            case RGBA -> {
+                for (int i = 0; i < count; i++) {
+                    pixels[i] = new Pixel.RGBA(
+                            (short) (buffer[offset++] & 0xFF),
+                            (short) (buffer[offset++] & 0xFF),
+                            (short) (buffer[offset++] & 0xFF),
+                            (short) (buffer[offset++] & 0xFF));
+                }
+            }
+            case Grayscale -> {
+                for (int i = 0; i < count; i++) {
+                    pixels[i] = new Pixel.Grayscale(
+                            (short) (buffer[offset++] & 0xFF),
+                            (short) (buffer[offset++] & 0xFF));
+                }
+            }
+            case Indexed -> {
+                for (int i = 0; i < count; i++) {
+                    pixels[i] = new Pixel.Index((short) (buffer[offset++] & 0xFF));
+                }
+            }
         }
         return pixels;
     }
-
 
     Tile[] TILES(int size, int bitsPerTile) throws IOException {
         var tiles = new Tile[size];

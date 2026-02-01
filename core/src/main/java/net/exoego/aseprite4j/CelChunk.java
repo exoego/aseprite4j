@@ -32,13 +32,7 @@ public interface CelChunk extends FrameChunk {
             case RAW_IMAGE_DATA -> {
                 var widthInPixels = reader.WORD();
                 var heightInPixels = reader.WORD();
-                var pixels = new Pixel[heightInPixels * widthInPixels];
-                for (int y = 0; y < heightInPixels; y++) {
-                    for (int x = 0; x < widthInPixels; x++) {
-                        var xy = y * widthInPixels + x;
-                        pixels[xy] = reader.PIXEL(colorDepth);
-                    }
-                }
+                var pixels = reader.PIXELS(heightInPixels * widthInPixels, colorDepth);
                 yield new RawImageDataCelChunk(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex, widthInPixels, heightInPixels, pixels);
             }
             case LINKED_CEL -> {

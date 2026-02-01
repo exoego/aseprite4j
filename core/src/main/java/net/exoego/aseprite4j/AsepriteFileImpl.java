@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 record AsepriteFileImpl(Header header, List<Frame> frames) implements AsepriteFile {
-    static AsepriteFile read(Path path) throws IOException {
+    static AsepriteFile read(Path path, ReadOptions options) throws IOException {
         try (var in = java.nio.file.Files.newInputStream(path)) {
-            var reader = new InputStreamReader(in);
+            var reader = new InputStreamReader(in, options.debugEnabled());
 
             var header = Header.read(reader);
             int numberOfFrames = header.numberOfFrames();
