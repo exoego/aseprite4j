@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-record Frame(FrameHeader header, List<FrameChunk> chunks) {
+public record Frame(FrameHeader header, List<FrameChunk> chunks) {
     static Frame read(InputStreamReader reader, ColorDepth colorDepth) throws IOException {
         var header = FrameHeaderImpl.read(reader);
 

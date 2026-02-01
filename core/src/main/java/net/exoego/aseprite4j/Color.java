@@ -1,6 +1,6 @@
 package net.exoego.aseprite4j;
 
-interface Color {
+public interface Color {
     record RGBA(short r, short g, short b, short a) implements Color {
         @Override
         public String toString() {

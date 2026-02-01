@@ -49,7 +49,7 @@ public interface CelChunk extends FrameChunk {
                 var widthInPixels = reader.WORD(); // 2 bits
                 var heightInPixels = reader.WORD(); // 2 bits
                 var pixels = reader
-                        .asDeflateZlib(restOfChunkSize - 4)
+                        .decompressZlib(restOfChunkSize - 4)
                         .PIXELS(heightInPixels * widthInPixels, colorDepth);
                 yield new CompressedImageCelChunk(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex, widthInPixels, heightInPixels, pixels);
             }
@@ -66,7 +66,7 @@ public interface CelChunk extends FrameChunk {
                 // reserved
                 reader.skip(10); // 10 bits
 
-                var tileData = reader.asDeflateZlib(restOfChunkSize - 32)
+                var tileData = reader.decompressZlib(restOfChunkSize - 32)
                         .TILES(heightInNumberOfTiles * widthInNumberOfTiles, bitsPerTile);
                 yield new CompressedTilemapCelChunk(layerIndex, xPosition, yPosition, opacityLevel, celType, zIndex,
                         widthInNumberOfTiles, heightInNumberOfTiles, bitsPerTile, bitmaskForTileId, bitmaskFoxXFlip,
