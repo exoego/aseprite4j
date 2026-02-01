@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.UUID;
 import java.util.zip.DeflaterInputStream;
 
@@ -34,14 +36,30 @@ public final class InputStreamReader {
     }
 
     static int toInt(byte[] bytes) {
-        return (int) toUnsignedInt(bytes);
+        assert bytes.length == 4;
+        return ((bytes[3] & 0xFF) << 24) |
+                ((bytes[2] & 0xFF) << 16) |
+                ((bytes[1] & 0xFF) << 8) |
+                (bytes[0] & 0xFF);
     }
 
     static long toUnsignedInt(byte[] bytes) {
         assert bytes.length == 4;
-        return (bytes[3] << 24) |
-                ((bytes[2] << 16) & 0xFF0000) |
-                ((bytes[1] << 8) & 0xFF00) |
+        return ((long) (bytes[3] & 0xFF) << 24) |
+                ((bytes[2] & 0xFF) << 16) |
+                ((bytes[1] & 0xFF) << 8) |
+                (bytes[0] & 0xFF);
+    }
+
+    static long toLong(byte[] bytes) {
+        assert bytes.length == 8;
+        return ((long) (bytes[7] & 0xFF) << 56) |
+                ((long) (bytes[6] & 0xFF) << 48) |
+                ((long) (bytes[5] & 0xFF) << 40) |
+                ((long) (bytes[4] & 0xFF) << 32) |
+                ((long) (bytes[3] & 0xFF) << 24) |
+                ((long) (bytes[2] & 0xFF) << 16) |
+                ((long) (bytes[1] & 0xFF) << 8) |
                 (bytes[0] & 0xFF);
     }
 
@@ -88,18 +106,42 @@ public final class InputStreamReader {
      * A 32-bit signed integer value
      */
     int INT32() throws IOException {
-        return toInt(readNBytes(2));
+        return toInt(readNBytes(4));
+    }
+
+    /**
+     * A 32-bit signed integer value (alias for INT32)
+     */
+    int LONG() throws IOException {
+        return INT32();
     }
 
     /**
      * A 64-bit signed integer value
      */
     long INT64() throws IOException {
-        return toUnsignedInt(readNBytes(2));
+        return toLong(readNBytes(8));
     }
 
+    /**
+     * A 64-bit signed integer value (alias for INT64)
+     */
+    long LONG64() throws IOException {
+        return INT64();
+    }
+
+    /**
+     * A 64-bit unsigned integer value
+     */
     BigInteger QWORD() throws IOException {
-        throw new UnsupportedOperationException("QWORD is not supported in this implementation");
+        byte[] bytes = readNBytes(8);
+        // Convert little-endian to big-endian for BigInteger
+        byte[] bigEndian = new byte[9]; // Extra byte for sign (unsigned)
+        bigEndian[0] = 0; // positive sign
+        for (int i = 0; i < 8; i++) {
+            bigEndian[i + 1] = bytes[7 - i];
+        }
+        return new BigInteger(bigEndian);
     }
 
     /**
@@ -119,8 +161,32 @@ public final class InputStreamReader {
     }
 
     UUID UUID() throws IOException {
-        var uuidBytes = readNBytes(16);
-        return UUID.nameUUIDFromBytes(uuidBytes);
+        byte[] uuidBytes = readNBytes(16);
+        // Construct UUID from raw bytes (little-endian format)
+        // UUID format: 4 bytes (time_low) + 2 bytes (time_mid) + 2 bytes (time_hi_and_version) +
+        //              1 byte (clock_seq_hi) + 1 byte (clock_seq_low) + 6 bytes (node)
+        long mostSigBits = 0;
+        long leastSigBits = 0;
+
+        // First 8 bytes -> mostSigBits (but in little-endian order per component)
+        // time_low (4 bytes, little-endian)
+        mostSigBits |= ((long) (uuidBytes[3] & 0xFF)) << 56;
+        mostSigBits |= ((long) (uuidBytes[2] & 0xFF)) << 48;
+        mostSigBits |= ((long) (uuidBytes[1] & 0xFF)) << 40;
+        mostSigBits |= ((long) (uuidBytes[0] & 0xFF)) << 32;
+        // time_mid (2 bytes, little-endian)
+        mostSigBits |= ((long) (uuidBytes[5] & 0xFF)) << 24;
+        mostSigBits |= ((long) (uuidBytes[4] & 0xFF)) << 16;
+        // time_hi_and_version (2 bytes, little-endian)
+        mostSigBits |= ((long) (uuidBytes[7] & 0xFF)) << 8;
+        mostSigBits |= ((long) (uuidBytes[6] & 0xFF));
+
+        // Last 8 bytes -> leastSigBits (clock_seq and node, big-endian)
+        for (int i = 8; i < 16; i++) {
+            leastSigBits = (leastSigBits << 8) | (uuidBytes[i] & 0xFF);
+        }
+
+        return new UUID(mostSigBits, leastSigBits);
     }
 
     Pixel PIXEL(ColorDepth depth) throws IOException {
@@ -153,33 +219,58 @@ public final class InputStreamReader {
         };
     }
 
+    /**
+     * A 32-bit fixed point (16.16) value.
+     * The integer part is in the high 16 bits, the fractional part in the low 16 bits.
+     */
     double FIXED() throws IOException {
-        double num0 = WORD();
-        double num1 = WORD();
-        while (num1 > 0) {
-            num1 /= 10.0;
-        }
-        return num0 + num1;
+        int raw = toInt(readNBytes(4));
+        return raw / 65536.0;
     }
 
+    /**
+     * A 32-bit IEEE 754 single-precision floating point value
+     */
     float FLOAT() throws IOException {
-        throw new UnsupportedOperationException("FLOAT is not supported in this implementation");
+        byte[] bytes = readNBytes(4);
+        ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
+        return buffer.getFloat();
     }
 
-    float DOUBLE() throws IOException {
-        throw new UnsupportedOperationException("DOUBLE is not supported in this implementation");
+    /**
+     * A 64-bit IEEE 754 double-precision floating point value
+     */
+    double DOUBLE() throws IOException {
+        byte[] bytes = readNBytes(8);
+        ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
+        return buffer.getDouble();
     }
 
-    float POINT() throws IOException {
-        throw new UnsupportedOperationException("DOUBLE is not supported in this implementation");
+    /**
+     * A point (two 32-bit signed integers: x, y)
+     */
+    Point POINT() throws IOException {
+        int x = INT32();
+        int y = INT32();
+        return new Point(x, y);
     }
 
-    float SIZE() throws IOException {
-        throw new UnsupportedOperationException("DOUBLE is not supported in this implementation");
+    /**
+     * A size (two 32-bit signed integers: width, height)
+     */
+    Size SIZE() throws IOException {
+        int width = INT32();
+        int height = INT32();
+        return new Size(width, height);
     }
 
-    float RECT() throws IOException {
-        throw new UnsupportedOperationException("DOUBLE is not supported in this implementation");
+    /**
+     * A rectangle (origin point + size)
+     */
+    Rect RECT() throws IOException {
+        Point origin = POINT();
+        Size size = SIZE();
+        return new Rect(origin, size);
     }
 
     InputStreamReader asDeflateZlib(int chunkSize) throws IOException {
@@ -219,7 +310,6 @@ public final class InputStreamReader {
         if (bytesRead != expectedSize) {
             throw new IOException("Expected size: " + expectedSize + ", but read: " + bytesRead + " bytes at " + currentAddress());
         }
-        System.out.println("Successfully read " + bytesRead);
         return r;
     }
 }
