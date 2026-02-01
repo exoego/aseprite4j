@@ -259,4 +259,137 @@ public class InputStreamReaderTest {
         var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
         assertThat(reader.LONG64()).isEqualTo(1L);
     }
+
+    @Test
+    void testPIXEL_RGBA() throws IOException {
+        var bytes = new byte[]{(byte) 0xFF, (byte) 0x80, 0x40, (byte) 0xC8};
+        var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
+        var pixel = reader.PIXEL(ColorDepth.RGBA);
+        assertThat(pixel).isInstanceOf(Pixel.RGBA.class);
+        var rgba = (Pixel.RGBA) pixel;
+        assertThat(rgba.r()).isEqualTo((short) 255);
+        assertThat(rgba.g()).isEqualTo((short) 128);
+        assertThat(rgba.b()).isEqualTo((short) 64);
+        assertThat(rgba.a()).isEqualTo((short) 200);
+    }
+
+    @Test
+    void testPIXEL_Grayscale() throws IOException {
+        var bytes = new byte[]{(byte) 0x80, (byte) 0xFF};
+        var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
+        var pixel = reader.PIXEL(ColorDepth.Grayscale);
+        assertThat(pixel).isInstanceOf(Pixel.Grayscale.class);
+        var gray = (Pixel.Grayscale) pixel;
+        assertThat(gray.value()).isEqualTo((short) 128);
+        assertThat(gray.alpha()).isEqualTo((short) 255);
+    }
+
+    @Test
+    void testPIXEL_Indexed() throws IOException {
+        var bytes = new byte[]{0x42};
+        var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
+        var pixel = reader.PIXEL(ColorDepth.Indexed);
+        assertThat(pixel).isInstanceOf(Pixel.Index.class);
+        var index = (Pixel.Index) pixel;
+        assertThat(index.index()).isEqualTo((short) 66);
+    }
+
+    @Test
+    void testTILE_8bit() throws IOException {
+        var bytes = new byte[]{0x42};
+        var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
+        var tile = reader.TILE(8);
+        assertThat(tile).isInstanceOf(Tile.Tile8.class);
+        assertThat(((Tile.Tile8) tile).value()).isEqualTo((short) 66);
+    }
+
+    @Test
+    void testTILE_16bit() throws IOException {
+        var bytes = new byte[]{0x34, 0x12}; // 0x1234
+        var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
+        var tile = reader.TILE(16);
+        assertThat(tile).isInstanceOf(Tile.Tile16.class);
+        assertThat(((Tile.Tile16) tile).value()).isEqualTo(0x1234);
+    }
+
+    @Test
+    void testTILE_32bit() throws IOException {
+        var bytes = new byte[]{0x78, 0x56, 0x34, 0x12}; // 0x12345678
+        var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
+        var tile = reader.TILE(32);
+        assertThat(tile).isInstanceOf(Tile.Tile32.class);
+        assertThat(((Tile.Tile32) tile).value()).isEqualTo(0x12345678L);
+    }
+
+    @Test
+    void testTILE_unsupportedBitsPerTile() {
+        var bytes = new byte[]{0x00};
+        var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
+        org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalArgumentException.class, () -> reader.TILE(64));
+    }
+
+    @Test
+    void testSkip() throws IOException {
+        var bytes = new byte[]{0x01, 0x02, 0x03, 0x04, 0x05};
+        var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
+        reader.skip(3);
+        assertThat(reader.BYTE()).isEqualTo((short) 4);
+    }
+
+    @Test
+    void testSkipLong() throws IOException {
+        var bytes = new byte[]{0x01, 0x02, 0x03, 0x04, 0x05};
+        var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
+        reader.skip(3L);
+        assertThat(reader.BYTE()).isEqualTo((short) 4);
+    }
+
+    @Test
+    void testCheckSize_success() throws IOException {
+        var bytes = new byte[]{0x01, 0x00, 0x00, 0x00};
+        var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
+        var result = reader.checkSize(4, reader::INT32);
+        assertThat(result).isEqualTo(1);
+    }
+
+    @Test
+    void testCheckSize_failure() {
+        var bytes = new byte[]{0x01, 0x00, 0x00, 0x00, 0x00};
+        var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
+        org.junit.jupiter.api.Assertions.assertThrows(
+                IOException.class, () -> reader.checkSize(5, reader::INT32));
+    }
+
+    @Test
+    void testCurrentAddress() {
+        var bytes = new byte[]{0x01, 0x02};
+        var reader = new InputStreamReader(new ByteArrayInputStream(bytes));
+        assertThat(reader.currentAddress()).isNotNull();
+    }
+
+    @Test
+    void testStaticConverters() {
+        // toUnsignedByte
+        assertThat(InputStreamReader.toUnsignedByte(new byte[]{(byte) 0xFF})).isEqualTo((short) 255);
+
+        // toShort
+        assertThat(InputStreamReader.toShort(new byte[]{(byte) 0xFF, (byte) 0x7F})).isEqualTo((short) 32767);
+        assertThat(InputStreamReader.toShort(new byte[]{0x00, (byte) 0x80})).isEqualTo((short) -32768);
+
+        // toUnsignedShort
+        assertThat(InputStreamReader.toUnsignedShort(new byte[]{(byte) 0xFF, (byte) 0xFF})).isEqualTo(65535);
+
+        // toInt
+        assertThat(InputStreamReader.toInt(new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, 0x7F}))
+                .isEqualTo(Integer.MAX_VALUE);
+
+        // toUnsignedInt
+        assertThat(InputStreamReader.toUnsignedInt(new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF}))
+                .isEqualTo(4294967295L);
+
+        // toLong
+        assertThat(InputStreamReader.toLong(new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
+                (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, 0x7F})).isEqualTo(Long.MAX_VALUE);
+    }
 }
