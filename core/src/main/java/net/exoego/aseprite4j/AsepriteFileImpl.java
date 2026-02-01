@@ -12,24 +12,11 @@ record AsepriteFileImpl(Header header, List<Frame> frames) implements AsepriteFi
             var reader = new InputStreamReader(in);
 
             var header = Header.read(reader);
-            System.out.println("# header read.");
             int numberOfFrames = header.numberOfFrames();
             var frames = new ArrayList<Frame>(numberOfFrames);
-            try {
-                for (int i = 0; i < numberOfFrames; i++) {
-                    var frame = Frame.read(reader, header.colorDepth());
-                    frames.add(frame);
-                }
-                System.out.println();
-                System.out.println("file: " + path.toFile().getName() + "\nnumberOfFrames: " + numberOfFrames + "\nここまで読めた at  " + frames.size() + "\n" +
-                        "header: " + header + "\n" +
-                        "frames: " + frames);
-            } catch (IOException e) {
-                System.err.println();
-                System.err.println("numberOfFrames: " + numberOfFrames + "\nここまで読めた at  " + frames.size() + "\n" +
-                        "header: " + header + "\n" +
-                        "frames: " + frames);
-                throw e;
+            for (int i = 0; i < numberOfFrames; i++) {
+                var frame = Frame.read(reader, header.colorDepth());
+                frames.add(frame);
             }
             return new AsepriteFileImpl(header, frames);
         }
