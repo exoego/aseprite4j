@@ -1,62 +1,63 @@
 package net.exoego.aseprite4j;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Set;
 
-public record TilesetChunk(long tilesetId, Set<TilesetFlag> tilesetFlagSet, long numberOfTiles, int tileWidth,
-                           int tileHeight, int baseIndex, String name) implements FrameChunk {
+public record TilesetChunk(
+        long tilesetId,
+        Set<TilesetFlag> tilesetFlagSet,
+        long numberOfTiles,
+        int tileWidth,
+        int tileHeight,
+        int baseIndex,
+        String name,
+        Optional<ExternalFileReference> externalFileReference,
+        Optional<Pixel[]> tilesetImage
+) implements FrameChunk {
+
+    public record ExternalFileReference(long externalFileId, long tilesetIdInExternalFile) {
+    }
+
     static TilesetChunk build(InputStreamReader reader, int chunkSize, ColorDepth colorDepth) throws IOException {
-        // TODO: Implement
         var tilesetId = reader.DWORD();
-        var tilsetFlags = TilesetFlag.from(reader.DWORD());
+        var tilesetFlags = TilesetFlag.from(reader.DWORD());
         var numberOfTiles = reader.DWORD();
         var tileWidth = reader.WORD();
         var tileHeight = reader.WORD();
         var baseIndex = reader.SHORT();
-
 
         // reserved
         reader.skip(14);
 
         var nameOfTileset = reader.STRING();
 
-        System.out.println(
-                "tilesetId: " + tilesetId +
-                        ",\n tilsetFlags: " + tilsetFlags +
-                        ",\n numberOfTiles: " + numberOfTiles +
-                        ",\n tileWidth: " + tileWidth +
-                        ",\n tileHeight: " + tileHeight +
-                        ",\n baseIndex: " + baseIndex +
-                        ",\n nameOfTileset: " + nameOfTileset
-        );
-
-
-        if (tilsetFlags.contains(TilesetFlag.INCLUDE_LINK_TO_EXTERNAL_FILE)) {
+        Optional<ExternalFileReference> externalFileReference = Optional.empty();
+        if (tilesetFlags.contains(TilesetFlag.INCLUDE_LINK_TO_EXTERNAL_FILE)) {
             var idOfExternalFile = reader.DWORD();
             var tilesetIdInExternalFile = reader.DWORD();
+            externalFileReference = Optional.of(new ExternalFileReference(idOfExternalFile, tilesetIdInExternalFile));
         }
 
-        if (tilsetFlags.contains(TilesetFlag.INCLUDE_TILES_INSIDE_THIS_FILE)) {
+        Optional<Pixel[]> tilesetImage = Optional.empty();
+        if (tilesetFlags.contains(TilesetFlag.INCLUDE_TILES_INSIDE_THIS_FILE)) {
             var dataLengthOfCompressedTilesetImage = reader.DWORD();
             int size = Math.toIntExact(tileWidth * tileHeight * numberOfTiles);
-            var compressedTilesetImage = reader.asDeflateZlib(Math.toIntExact(dataLengthOfCompressedTilesetImage))
-                    .PIXELS(size, colorDepth);
+            var compressedTilesetImageReader = reader.asDeflateZlib(Math.toIntExact(dataLengthOfCompressedTilesetImage));
+            var pixels = compressedTilesetImageReader.PIXELS(size, colorDepth);
+            tilesetImage = Optional.of(pixels);
         }
 
-        if (tilsetFlags.contains(TilesetFlag.USE_TILE_ID_0_AS_EMPTY)) {
-            // TODO
-        }
-        if (tilsetFlags.contains(TilesetFlag.X_FLIPPED_VERSION_WILL_BE_TRIED_TO_MATCH_WITH)) {
-            // TODO
-        }
-        if (tilsetFlags.contains(TilesetFlag.Y_FLIPPED_VERSION_WILL_BE_TRIED_TO_MATCH_WITH)) {
-            // TODO
-        }
-        if (tilsetFlags.contains(TilesetFlag.DIAGONAL_FLIPPED_VERSION_WILL_BE_TRIED_TO_MATCH_WITH)) {
-            // TODO
-        }
-
-        return new TilesetChunk(tilesetId, tilsetFlags, numberOfTiles,
-                tileWidth, tileHeight, baseIndex, nameOfTileset);
+        return new TilesetChunk(
+                tilesetId,
+                tilesetFlags,
+                numberOfTiles,
+                tileWidth,
+                tileHeight,
+                baseIndex,
+                nameOfTileset,
+                externalFileReference,
+                tilesetImage
+        );
     }
 }
