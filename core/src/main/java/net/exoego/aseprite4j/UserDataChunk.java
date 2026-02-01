@@ -1,14 +1,16 @@
 package net.exoego.aseprite4j;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 public final class UserDataChunk implements FrameChunk {
 
-    private static UserDataChunk EMPTY = new UserDataChunk(null, null, null);
+    private static final UserDataChunk EMPTY = new UserDataChunk(null, null, null);
 
     private final String maybeText;
     private final Color.RGBA maybeColor;
@@ -21,15 +23,15 @@ public final class UserDataChunk implements FrameChunk {
     }
 
     public Optional<String> getMaybeText() {
-        return Optional.of(this.maybeText);
+        return Optional.ofNullable(this.maybeText);
     }
 
     public Optional<Color.RGBA> getMaybeColor() {
-        return Optional.of(this.maybeColor);
+        return Optional.ofNullable(this.maybeColor);
     }
 
     public Optional<Map<String, Object>> getMaybeProperties() {
-        return Optional.of(this.maybeProperties);
+        return Optional.ofNullable(this.maybeProperties);
     }
 
     @Override
@@ -46,9 +48,9 @@ public final class UserDataChunk implements FrameChunk {
         if (this == o) return true;
         if (!(o instanceof UserDataChunk that)) return false;
 
-        if (!maybeText.equals(that.maybeText)) return false;
-        if (!maybeColor.equals(that.maybeColor)) return false;
-        return maybeProperties.equals(that.maybeProperties);
+        if (!Objects.equals(maybeText, that.maybeText)) return false;
+        if (!Objects.equals(maybeColor, that.maybeColor)) return false;
+        return Objects.equals(maybeProperties, that.maybeProperties);
     }
 
     @Override
@@ -57,123 +59,128 @@ public final class UserDataChunk implements FrameChunk {
     }
 
     static UserDataChunk build(int chunkSize, InputStreamReader reader) throws IOException {
-        return reader.checkSize(chunkSize, () -> {
-            var flags = reader.DWORD();
+        var flags = reader.DWORD();
 
-            if (flags == 0) {
-                // empty user data chunk may appear after the tileset chunk
-                return EMPTY;
-            }
+        if (flags == 0) {
+            // empty user data chunk may appear after the tileset chunk
+            return EMPTY;
+        }
 
-            String maybeText = null;
-            if ((flags & 0x1) != 0) {
-                maybeText = reader.STRING();
-            }
+        String maybeText = null;
+        if ((flags & 0x1) != 0) {
+            maybeText = reader.STRING();
+        }
 
-            Color.RGBA maybeColor = null;
-            if ((flags & 0x2) != 0) {
-                maybeColor = new Color.RGBA(reader.BYTE(), reader.BYTE(), reader.BYTE(), reader.BYTE());
-            }
+        Color.RGBA maybeColor = null;
+        if ((flags & 0x2) != 0) {
+            maybeColor = new Color.RGBA(reader.BYTE(), reader.BYTE(), reader.BYTE(), reader.BYTE());
+        }
 
-            Map<String, Object> maybeProperties = null;
+        Map<String, Object> maybeProperties = null;
 
-            if ((flags & 0x4) != 0) {
-                var sizeInBytesOfAllPropertiesInThisChunk = reader.DWORD();
+        if ((flags & 0x4) != 0) {
+            var sizeInBytesOfAllPropertiesInThisChunk = reader.DWORD();
+            var numberOfPropertyMaps = Math.toIntExact(reader.DWORD());
+            maybeProperties = new HashMap<>();
+
+            for (int mapIndex = 0; mapIndex < numberOfPropertyMaps; mapIndex++) {
+                var extensionKey = reader.DWORD();
                 var numberOfProperties = Math.toIntExact(reader.DWORD());
-                maybeProperties = new HashMap<String, Object>(numberOfProperties);
+
                 for (int i = 0; i < numberOfProperties; i++) {
                     var propertyName = reader.STRING();
-                    if (propertyName.isEmpty()) {
-                        // user properties
-                    }
-                    var propertyType = reader.WORD();
-                    switch (propertyType) {
-                        case 0x1 -> {
-                            var bool = reader.BYTE() != 0;
-                            maybeProperties.put(propertyName, bool);
-                        }
-                        case 0x2 -> {
-                            var int8 = reader.BYTE();
-                            maybeProperties.put(propertyName, int8);
-                        }
-                        case 0x3 -> {
-                            var uint8 = reader.BYTE();
-                            maybeProperties.put(propertyName, uint8);
-                        }
-                        case 0x4 -> {
-                            var int16 = reader.SHORT();
-                            maybeProperties.put(propertyName, int16);
-                        }
-                        case 0x5 -> {
-                            var uint16 = reader.WORD();
-                            maybeProperties.put(propertyName, uint16);
-                        }
-                        case 0x6 -> {
-                            var int32 = reader.INT32();
-                            maybeProperties.put(propertyName, int32);
-                        }
-                        case 0x7 -> {
-                            var uint32 = reader.DWORD();
-                            maybeProperties.put(propertyName, uint32);
-                        }
-                        case 0x8 -> {
-                            var int64 = reader.INT64();
-                            maybeProperties.put(propertyName, int64);
-                        }
-                        case 0x9 -> {
-                            var uint64 = reader.QWORD();
-                            maybeProperties.put(propertyName, uint64);
-                        }
-                        case 0xA -> {
-                            var v = reader.FIXED();
-                            maybeProperties.put(propertyName, v);
-                        }
-                        case 0xB -> {
-                            var v = reader.FLOAT();
-                            maybeProperties.put(propertyName, v);
-                        }
-                        case 0xC -> {
-                            var v = reader.DOUBLE();
-                            maybeProperties.put(propertyName, v);
-                        }
-                        case 0xD -> {
-                            var v = reader.STRING();
-                            maybeProperties.put(propertyName, v);
-                        }
-                        case 0xE -> {
-                            var v = reader.POINT();
-                            maybeProperties.put(propertyName, v);
-                        }
-                        case 0xF -> {
-                            var v = reader.SIZE();
-                            maybeProperties.put(propertyName, v);
-                        }
-                        case 0x10 -> {
-                            var v = reader.RECT();
-                            maybeProperties.put(propertyName, v);
-                        }
-                        case 0x11 -> {
-                            // TODO:vector
-                        }
-                        case 0x12 -> {
-                            // TODO:nested
-                        }
-                        case 0x13 -> {
-                            var v = reader.UUID();
-                            maybeProperties.put(propertyName, v);
-                        }
-                        default -> {
-                            System.out.println("Unknown property type: " + propertyType + " for property: " + propertyName);
-                        }
-                    }
-                }
-
-                if (maybeProperties.size() != numberOfProperties) {
-                    throw new IllegalStateException("Expected " + numberOfProperties + " properties, but got " + maybeProperties.size());
+                    var propertyValue = readPropertyValue(reader);
+                    maybeProperties.put(propertyName, propertyValue);
                 }
             }
+        }
 
-            return new UserDataChunk(maybeText, maybeColor, maybeProperties);
-        });
+        return new UserDataChunk(maybeText, maybeColor, maybeProperties);
+    }
+
+    private static Object readPropertyValue(InputStreamReader reader) throws IOException {
+        var propertyType = reader.WORD();
+        return switch (propertyType) {
+            case 0x01 -> reader.BYTE() != 0; // bool
+            case 0x02 -> (byte) reader.BYTE(); // int8
+            case 0x03 -> reader.BYTE(); // uint8
+            case 0x04 -> (short) reader.SHORT(); // int16
+            case 0x05 -> reader.WORD(); // uint16
+            case 0x06 -> reader.INT32(); // int32
+            case 0x07 -> reader.DWORD(); // uint32
+            case 0x08 -> reader.INT64(); // int64
+            case 0x09 -> reader.QWORD(); // uint64
+            case 0x0A -> reader.FIXED(); // fixed
+            case 0x0B -> reader.FLOAT(); // float
+            case 0x0C -> reader.DOUBLE(); // double
+            case 0x0D -> reader.STRING(); // string
+            case 0x0E -> reader.POINT(); // point
+            case 0x0F -> reader.SIZE(); // size
+            case 0x10 -> reader.RECT(); // rect
+            case 0x11 -> readVector(reader); // vector
+            case 0x12 -> readNestedProperties(reader); // nested properties map
+            case 0x13 -> reader.UUID(); // uuid
+            default -> throw new IOException("Unknown property type: " + propertyType);
+        };
+    }
+
+    private static List<Object> readVector(InputStreamReader reader) throws IOException {
+        var numberOfElements = Math.toIntExact(reader.DWORD());
+        var elementType = reader.WORD();
+        var list = new ArrayList<>(numberOfElements);
+
+        if (elementType == 0) {
+            // All elements are not of the same type
+            for (int i = 0; i < numberOfElements; i++) {
+                var element = readPropertyValue(reader);
+                list.add(element);
+            }
+        } else {
+            // All elements are of the same type
+            for (int i = 0; i < numberOfElements; i++) {
+                var element = readPropertyValueOfType(reader, elementType);
+                list.add(element);
+            }
+        }
+
+        return list;
+    }
+
+    private static Object readPropertyValueOfType(InputStreamReader reader, int propertyType) throws IOException {
+        return switch (propertyType) {
+            case 0x01 -> reader.BYTE() != 0; // bool
+            case 0x02 -> (byte) reader.BYTE(); // int8
+            case 0x03 -> reader.BYTE(); // uint8
+            case 0x04 -> (short) reader.SHORT(); // int16
+            case 0x05 -> reader.WORD(); // uint16
+            case 0x06 -> reader.INT32(); // int32
+            case 0x07 -> reader.DWORD(); // uint32
+            case 0x08 -> reader.INT64(); // int64
+            case 0x09 -> reader.QWORD(); // uint64
+            case 0x0A -> reader.FIXED(); // fixed
+            case 0x0B -> reader.FLOAT(); // float
+            case 0x0C -> reader.DOUBLE(); // double
+            case 0x0D -> reader.STRING(); // string
+            case 0x0E -> reader.POINT(); // point
+            case 0x0F -> reader.SIZE(); // size
+            case 0x10 -> reader.RECT(); // rect
+            case 0x11 -> readVector(reader); // nested vector
+            case 0x12 -> readNestedProperties(reader); // nested properties map
+            case 0x13 -> reader.UUID(); // uuid
+            default -> throw new IOException("Unknown property type: " + propertyType);
+        };
+    }
+
+    private static Map<String, Object> readNestedProperties(InputStreamReader reader) throws IOException {
+        var numberOfProperties = Math.toIntExact(reader.DWORD());
+        var map = new HashMap<String, Object>(numberOfProperties);
+
+        for (int i = 0; i < numberOfProperties; i++) {
+            var propertyName = reader.STRING();
+            var propertyValue = readPropertyValue(reader);
+            map.put(propertyName, propertyValue);
+        }
+
+        return map;
     }
 }
