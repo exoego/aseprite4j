@@ -3,10 +3,22 @@ plugins {
     jacoco
     `maven-publish`
     signing
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 group = "net.exoego.aseprite4j"
 version = System.getenv("RELEASE_VERSION") ?: "1.0-SNAPSHOT"
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://oss.sonatype.org/content/repositories/snapshots/"))
+            username.set(System.getenv("OSSRH_USERNAME"))
+            password.set(System.getenv("OSSRH_PASSWORD"))
+        }
+    }
+}
 
 subprojects {
     apply(plugin = "java")
@@ -74,21 +86,6 @@ project(":core") {
                         developerConnection.set("scm:git:ssh://github.com:exoego/aseprite4j.git")
                         url.set("https://github.com/exoego/aseprite4j")
                     }
-                }
-            }
-        }
-
-        repositories {
-            maven {
-                name = "OSSRH"
-                url = if (version.toString().endsWith("-SNAPSHOT")) {
-                    uri("https://oss.sonatype.org/content/repositories/snapshots/")
-                } else {
-                    uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-                }
-                credentials {
-                    username = System.getenv("OSSRH_USERNAME")
-                    password = System.getenv("OSSRH_PASSWORD")
                 }
             }
         }
