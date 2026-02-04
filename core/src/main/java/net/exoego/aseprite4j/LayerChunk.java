@@ -1,6 +1,7 @@
 package net.exoego.aseprite4j;
 
 import java.io.IOException;
+import java.util.OptionalInt;
 import java.util.Set;
 
 public record LayerChunk(
@@ -9,7 +10,8 @@ public record LayerChunk(
         int childLevel,
         LayerBlendMode blendMode,
         short opacity,
-        String name
+        String name,
+        OptionalInt tilesetIndex
 ) implements FrameChunk {
     static LayerChunk build(InputStreamReader reader) throws IOException {
         var flagsRaw = reader.WORD();
@@ -29,8 +31,9 @@ public record LayerChunk(
 
         var layerName = reader.STRING();
 
+        OptionalInt tilesetIndex = OptionalInt.empty();
         if (layerType == LayerType.TILEMAP) {
-            var tilesetIndex = reader.DWORD();
+            tilesetIndex = OptionalInt.of((int) reader.DWORD());
         }
 
         return new LayerChunk(
@@ -39,7 +42,8 @@ public record LayerChunk(
                 childLevel,
                 blendMode,
                 opacity,
-                layerName
+                layerName,
+                tilesetIndex
         );
     }
 

@@ -18,20 +18,20 @@ A Java library for reading [Aseprite](https://www.aseprite.org/) files (.aseprit
 <dependency>
     <groupId>net.exoego.aseprite4j</groupId>
     <artifactId>aseprite4j-core</artifactId>
-    <version>1.0.0</version>
+    <version>x.y.z</version>
 </dependency>
 ```
 
 ### Gradle (Kotlin DSL)
 
 ```kotlin
-implementation("net.exoego.aseprite4j:aseprite4j-core:1.0.0")
+implementation("net.exoego.aseprite4j:aseprite4j-core:x.y.z")
 ```
 
 ### SBT
 
 ```scala
-libraryDependencies += "net.exoego.aseprite4j" % "aseprite4j-core" % "1.0.0"
+libraryDependencies += "net.exoego.aseprite4j" % "aseprite4j-core" % "x.y.z"
 ```
 
 ## Usage
